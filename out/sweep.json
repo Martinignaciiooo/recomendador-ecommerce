@@ -1,0 +1,120 @@
+{
+  "grid": [
+    {
+      "factors": 32,
+      "regularization": 0.05,
+      "iterations": 20,
+      "alpha": 40,
+      "modelo": "ALS (factorización matricial)",
+      "usuarios_evaluados": 1087,
+      "precision@10": 0.021987120515179395,
+      "recall@10": 0.08180636851846454,
+      "map@10": 0.03676701080104944,
+      "cobertura_catalogo": 0.17371995820271682,
+      "ms_por_usuario": 0.07884504604251866
+    },
+    {
+      "factors": 64,
+      "regularization": 0.05,
+      "iterations": 20,
+      "alpha": 40,
+      "modelo": "ALS (factorización matricial)",
+      "usuarios_evaluados": 1087,
+      "precision@10": 0.021067157313707455,
+      "recall@10": 0.07856325014076444,
+      "map@10": 0.03565873328785669,
+      "cobertura_catalogo": 0.26684952978056425,
+      "ms_por_usuario": 0.07462391857719246
+    },
+    {
+      "factors": 128,
+      "regularization": 0.05,
+      "iterations": 20,
+      "alpha": 40,
+      "modelo": "ALS (factorización matricial)",
+      "usuarios_evaluados": 1087,
+      "precision@10": 0.02042318307267709,
+      "recall@10": 0.08127178126005914,
+      "map@10": 0.03298664175881944,
+      "cobertura_catalogo": 0.3467868338557994,
+      "ms_por_usuario": 0.06921047888003913
+    },
+    {
+      "factors": 64,
+      "regularization": 0.01,
+      "iterations": 20,
+      "alpha": 40,
+      "modelo": "ALS (factorización matricial)",
+      "usuarios_evaluados": 1087,
+      "precision@10": 0.021803127874885007,
+      "recall@10": 0.0814051823888753,
+      "map@10": 0.03661031587837015,
+      "cobertura_catalogo": 0.2577063740856844,
+      "ms_por_usuario": 0.06592240811710305
+    },
+    {
+      "factors": 64,
+      "regularization": 0.1,
+      "iterations": 20,
+      "alpha": 40,
+      "modelo": "ALS (factorización matricial)",
+      "usuarios_evaluados": 1087,
+      "precision@10": 0.02125114995400184,
+      "recall@10": 0.08069893516513393,
+      "map@10": 0.03530784897351901,
+      "cobertura_catalogo": 0.26959247648902823,
+      "ms_por_usuario": 0.07268915290446488
+    },
+    {
+      "factors": 64,
+      "regularization": 0.05,
+      "iterations": 30,
+      "alpha": 15,
+      "modelo": "ALS (factorización matricial)",
+      "usuarios_evaluados": 1087,
+      "precision@10": 0.02125114995400184,
+      "recall@10": 0.07772151295565842,
+      "map@10": 0.03542814042036454,
+      "cobertura_catalogo": 0.21721525600835945,
+      "ms_por_usuario": 0.06644771860187604
+    },
+    {
+      "factors": 64,
+      "regularization": 0.05,
+      "iterations": 30,
+      "alpha": 100,
+      "modelo": "ALS (factorización matricial)",
+      "usuarios_evaluados": 1087,
+      "precision@10": 0.0203311867525299,
+      "recall@10": 0.08009579814065376,
+      "map@10": 0.033703419764443986,
+      "cobertura_catalogo": 0.30786311389759663,
+      "ms_por_usuario": 0.13498834436270987
+    },
+    {
+      "factors": 96,
+      "regularization": 0.05,
+      "iterations": 30,
+      "alpha": 40,
+      "modelo": "ALS (factorización matricial)",
+      "usuarios_evaluados": 1087,
+      "precision@10": 0.02079116835326587,
+      "recall@10": 0.07979016872968858,
+      "map@10": 0.03443726034657278,
+      "cobertura_catalogo": 0.30903866248693834,
+      "ms_por_usuario": 0.08670013764634962
+    }
+  ],
+  "best": {
+    "factors": 32,
+    "regularization": 0.05,
+    "iterations": 20,
+    "alpha": 40
+  },
+  "latencia_ms": {
+    "media": 0.15083030200071335,
+    "p50": 0.10885700001495024,
+    "p95": 0.37604454999353626,
+    "p99": 0.6368322000102443
+  }
+}

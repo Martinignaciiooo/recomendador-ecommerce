@@ -1,0 +1,28 @@
+[
+  {
+    "modelo": "Popularidad (baseline)",
+    "usuarios_evaluados": 1087,
+    "precision@10": 0.0125114995400184,
+    "recall@10": 0.04413543879939911,
+    "map@10": 0.02389377467229353,
+    "cobertura_catalogo": 0.002220480668756531,
+    "ms_por_usuario": 0.6258362679714004
+  },
+  {
+    "modelo": "Item-item CF (coseno)",
+    "usuarios_evaluados": 1087,
+    "precision@10": 0.011315547378104876,
+    "recall@10": 0.04404383321640749,
+    "map@10": 0.015366020015284048,
+    "cobertura_catalogo": 0.37343260188087773,
+    "ms_por_usuario": 0.164949904918232
+  },
+  {
+    "modelo": "ALS (seleccionado, 32 factores)",
+    "usuarios_evaluados": 1087,
+    "precision@10": 0.021987120515179395,
+    "recall@10": 0.08180636851846454,
+    "map@10": 0.03676701080104944,
+    "cobertura_catalogo": 0.17371995820271682
+  }
+]

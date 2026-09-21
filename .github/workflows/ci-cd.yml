@@ -1,0 +1,80 @@
+# Pipeline CI/CD: build -> test -> deploy (IE7, EFT: "mínimo build, test, deploy")
+#
+# En cada push o pull request a main: instala, corre los 27 tests, construye la
+# imagen Docker y la prueba levantándola de verdad.
+# Solo en push a main (código ya integrado): despliega en EC2 por SSH. El script
+# deploy.sh verifica la salud del servicio y hace rollback si la versión falla.
+#
+# Secretos requeridos (Settings > Secrets and variables > Actions):
+#   EC2_HOST       IP pública o dominio de la instancia
+#   EC2_USER       ec2-user
+#   EC2_SSH_KEY    contenido completo del archivo .pem
+#   PUBLIC_DOMAIN  dominio HTTPS (ej. reco-equipo3.duckdns.org)
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    name: Build y test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Tests (unitarios, integración, funcionales)
+        working-directory: src
+        env:
+          OPENBLAS_NUM_THREADS: "1"
+        run: pytest -v tests_reco.py
+
+      - name: Construir imagen Docker
+        run: docker build -t reco-api:${{ github.sha }} .
+
+      - name: Smoke test de la imagen
+        run: |
+          docker run -d --name smoke -p 8000:8000 reco-api:${{ github.sha }}
+          for i in $(seq 1 30); do
+            if curl -fsS localhost:8000/salud; then
+              curl -fsS "localhost:8000/recomendaciones?user_id=999999999999&k=3"
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs smoke
+          exit 1
+
+  deploy:
+    name: Deploy a EC2
+    needs: build-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Desplegar por SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/reco/app
+            git fetch --all
+            git reset --hard origin/main
+            bash deploy/deploy.sh
+
+      - name: Verificar el servicio público por HTTPS
+        run: |
+          sleep 5
+          curl -fsS https://${{ secrets.PUBLIC_DOMAIN }}/salud

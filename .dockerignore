@@ -1,0 +1,13 @@
+.venv/
+data/
+out/dataset.pkl
+out/eventos.db
+out/*.json
+out/*.png
+**/__pycache__
+**/.pytest_cache
+.git
+.github
+sagemaker/
+deploy/
+*.md

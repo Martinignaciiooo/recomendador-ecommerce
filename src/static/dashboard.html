@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recomendador · Panel</title>
+<style>
+  :root{--navy:#1B2A4A;--deep:#0A5A82;--teal:#1C7293;--amber:#D98C1F;--red:#B3453A;--green:#2E7D4F;
+        --bg:#F4F6F8;--card:#FFFFFF;--line:#DCE3E8;--muted:#5B6770;--text:#1F2933}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Calibri,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
+  header{background:var(--navy);color:#fff;padding:18px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+  header h1{margin:0;font-family:Cambria,Georgia,serif;font-size:22px}
+  header .sub{color:#AFC3D6;font-size:13px;margin-top:2px}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
+  .ok{background:#E3F4EA;color:var(--green)} .bad{background:#FBE7E5;color:var(--red)}
+  main{max-width:1180px;margin:0 auto;padding:22px}
+  .grid{display:grid;gap:16px}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(30,50,70,.06)}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--deep);font-family:Cambria,Georgia,serif}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+  h2{font-family:Cambria,Georgia,serif;color:var(--navy);font-size:18px;margin:0 0 12px}
+  .two{grid-template-columns:2fr 1fr} @media(max-width:860px){.two{grid-template-columns:1fr}}
+  label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+  input,select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;width:100%}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+  .row>div{flex:1;min-width:140px}
+  button{font:inherit;font-weight:700;padding:9px 14px;border:0;border-radius:6px;cursor:pointer;background:var(--deep);color:#fff}
+  button.sec{background:#E6EDF2;color:var(--navy)} button.warn{background:var(--amber)}
+  button.mini{padding:4px 9px;font-size:12px}
+  .src{font-weight:700;padding:3px 10px;border-radius:999px;font-size:12px}
+  .src.model{background:#DCEBF4;color:var(--deep)} .src.cache{background:#E3F4EA;color:var(--green)} .src.fallback{background:#FDF0DC;color:#8A5A10}
+  .tablewrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--line);padding:8px}
+  td{border-bottom:1px solid #EEF2F5;padding:8px}
+  .muted{color:var(--muted);font-size:13px}
+  .msg{margin-top:10px;font-size:13px;min-height:18px}
+  .cmp{width:100%;font-size:13px} .cmp td{padding:5px 4px} .cmp .b{font-weight:700;color:var(--deep)}
+  code{background:#EEF2F5;padding:1px 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Sistema de Recomendación de Productos</h1>
+    <div class="sub">Panel de operación · Caso 1 · ITY1102</div>
+  </div>
+  <div><span id="health" class="pill bad">verificando…</span> <span id="ver" class="muted" style="color:#AFC3D6"></span></div>
+</header>
+
+<main class="grid">
+  <section class="grid kpis">
+    <div class="card kpi"><div class="v" id="k-total">–</div><div class="l">Solicitudes</div></div>
+    <div class="card kpi"><div class="v" id="k-p95">–</div><div class="l">Latencia p95 (ms)</div></div>
+    <div class="card kpi"><div class="v" id="k-p99">–</div><div class="l">Latencia p99 (ms)</div></div>
+    <div class="card kpi"><div class="v" id="k-cache">–</div><div class="l">Cache hit</div></div>
+    <div class="card kpi"><div class="v" id="k-fb">–</div><div class="l">Fallback</div></div>
+    <div class="card kpi"><div class="v" id="k-err">–</div><div class="l">Errores</div></div>
+  </section>
+
+  <section class="grid two">
+    <div class="card">
+      <h2>Consultar recomendaciones</h2>
+      <div class="row">
+        <div><label for="uid">user_id</label><input id="uid" placeholder="ej. 1515915625353230683"></div>
+        <div style="max-width:110px"><label for="k">k</label>
+          <select id="k"><option>5</option><option selected>10</option><option>20</option></select></div>
+        <div style="flex:0"><button id="go">Recomendar</button></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div style="flex:0"><button class="sec" id="sample">Usuario de ejemplo</button></div>
+        <div style="flex:0"><button class="warn" id="cold">Usuario nuevo (cold start)</button></div>
+      </div>
+      <div class="msg" id="meta"></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>#</th><th>Producto</th><th>Categoría</th><th>Marca</th><th>Precio</th><th>Score</th><th></th></tr></thead>
+          <tbody id="tbody"><tr><td colspan="7" class="muted">Ingresa un user_id o usa un ejemplo.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid" style="align-content:start">
+      <div class="card">
+        <h2>Modelo activo</h2>
+        <div id="model" class="muted">cargando…</div>
+      </div>
+      <div class="card">
+        <h2>Acceso</h2>
+        <label for="tok">Token (si la API tiene autenticación activa)</label>
+        <input id="tok" type="password" placeholder="Bearer token">
+        <p class="muted" style="margin-bottom:0">El token solo se guarda en esta pestaña. Endpoints: <code>/docs</code> · <code>/metricas</code> · <code>/modelo</code></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const pct = (x) => (x * 100).toFixed(1) + "%";
+const esc = (s) => String(s ?? "—").replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+async function api(path, opts = {}) {
+  const headers = Object.assign({"Content-Type": "application/json"}, opts.headers || {});
+  const tok = $("tok").value.trim();
+  if (tok) headers["Authorization"] = "Bearer " + tok;
+  const r = await fetch(path, Object.assign({}, opts, {headers}));
+  if (!r.ok) throw new Error(r.status + " — " + (await r.text()));
+  return r.json();
+}
+
+async function refreshMetrics() {
+  try {
+    const [h, m] = await Promise.all([api("/salud"), api("/metricas")]);
+    $("health").textContent = h.estado === "ok" ? "servicio OK" : "degradado";
+    $("health").className = "pill " + (h.estado === "ok" ? "ok" : "bad");
+    $("ver").textContent = h.modelo || "";
+    $("k-total").textContent = m.solicitudes_totales.toLocaleString("es-CL");
+    $("k-p95").textContent = m.latencia_ms.p95;
+    $("k-p99").textContent = m.latencia_ms.p99;
+    $("k-cache").textContent = pct(m.tasa_cache_hit);
+    $("k-fb").textContent = pct(m.tasa_fallback);
+    $("k-err").textContent = pct(m.tasa_error);
+  } catch (e) {
+    $("health").textContent = "sin conexión";
+    $("health").className = "pill bad";
+  }
+}
+
+async function loadModel() {
+  try {
+    const m = await api("/modelo");
+    const o = m.metricas_offline, b = m.baseline_popularidad;
+    const rel = (a, c) => c > 0 ? "+" + Math.round((a / c - 1) * 100) + "%" : "—";
+    $("model").innerHTML = `
+      <div><b>${esc(m.version)}</b> · ${esc(m.algoritmo)}</div>
+      <div class="muted">Entrenado: ${esc(m.entrenado_en)} · ${m.dimensiones.usuarios.toLocaleString("es-CL")} usuarios × ${m.dimensiones.productos.toLocaleString("es-CL")} productos</div>
+      <table class="cmp" style="margin-top:10px">
+        <tr><td></td><td class="muted">ALS</td><td class="muted">Popularidad</td><td class="muted">Mejora</td></tr>
+        <tr><td>Precision@10</td><td class="b">${o["precision@10"].toFixed(4)}</td><td>${b["precision@10"].toFixed(4)}</td><td>${rel(o["precision@10"], b["precision@10"])}</td></tr>
+        <tr><td>Recall@10</td><td class="b">${o["recall@10"].toFixed(4)}</td><td>${b["recall@10"].toFixed(4)}</td><td>${rel(o["recall@10"], b["recall@10"])}</td></tr>
+        <tr><td>MAP@10</td><td class="b">${o["map@10"].toFixed(4)}</td><td>${b["map@10"].toFixed(4)}</td><td>${rel(o["map@10"], b["map@10"])}</td></tr>
+        <tr><td>Cobertura</td><td class="b">${pct(o.cobertura_catalogo)}</td><td>${pct(b.cobertura_catalogo)}</td><td></td></tr>
+      </table>
+      <p class="muted" style="margin-bottom:0">Métricas offline sobre split temporal (${m.usuarios_test.toLocaleString("es-CL")} usuarios de test). No equivalen a conversión.</p>`;
+  } catch (e) {
+    $("model").textContent = "No se pudo cargar: " + e.message;
+  }
+}
+
+async function recommend() {
+  const uid = $("uid").value.trim();
+  if (!/^\d+$/.test(uid)) { $("meta").textContent = "El user_id debe ser numérico."; return; }
+  $("meta").textContent = "Consultando…";
+  try {
+    // uid se envía como texto: los IDs superan Number.MAX_SAFE_INTEGER
+    const r = await api(`/recomendaciones?user_id=${uid}&k=${$("k").value}`);
+    const nota = {model: "inferencia personalizada", cache: "servida desde caché", fallback: "usuario sin historial → más vendidos"}[r.source];
+    $("meta").innerHTML = `<span class="src ${r.source}">${r.source}</span> ${nota} · ${r.latency_ms} ms · modelo ${esc(r.model_version)}`;
+    $("tbody").innerHTML = r.recommendations.map((p, i) => `
+      <tr><td>${i + 1}</td><td>${p.product_id}</td><td>${esc(p.categoria)}</td><td>${esc(p.marca)}</td>
+      <td>${p.precio != null ? "$" + p.precio.toFixed(2) : "—"}</td><td>${p.score.toFixed(4)}</td>
+      <td><button class="mini sec" data-pid="${p.product_id}">registrar compra</button></td></tr>`).join("");
+    refreshMetrics();
+  } catch (e) {
+    $("meta").textContent = "Error: " + e.message;
+  }
+}
+
+async function buy(pid) {
+  const uid = $("uid").value.trim();
+  try {
+    await api("/eventos", {method: "POST", body: JSON.stringify({user_id: uid, product_id: Number(pid), event_type: "purchase"})});
+    $("meta").innerHTML = `Compra del producto ${pid} registrada. La caché del usuario se invalidó: la próxima consulta vuelve a pasar por el modelo.`;
+    refreshMetrics();
+  } catch (e) {
+    $("meta").textContent = "Error: " + e.message;
+  }
+}
+
+$("go").onclick = recommend;
+$("uid").addEventListener("keydown", (e) => { if (e.key === "Enter") recommend(); });
+$("cold").onclick = () => { $("uid").value = "999999999999"; recommend(); };
+$("sample").onclick = async () => {
+  try {
+    const ids = await api("/usuarios-ejemplo?n=20");
+    $("uid").value = ids[Math.floor(Math.random() * ids.length)];
+    recommend();
+  } catch (e) { $("meta").textContent = "Error: " + e.message; }
+};
+$("tbody").addEventListener("click", (e) => { const pid = e.target.dataset && e.target.dataset.pid; if (pid) buy(pid); });
+
+refreshMetrics(); loadModel();
+setInterval(refreshMetrics, 3000);
+</script>
+</body>
+</html>

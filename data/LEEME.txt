@@ -1,0 +1,9 @@
+El archivo events.csv (100 MB) no se incluye en este paquete por su tamaño.
+
+Obtenerlo desde el ZIP entregado por el docente:
+  Caso_1_ecommerce_OPCIONAL.zip > Caso 1 > dataset_ecommerce.zip > events.csv
+
+Colocarlo en esta carpeta (data/events.csv) antes de ejecutar prepare_data.py.
+
+Fuente original:
+https://www.kaggle.com/datasets/mkechinov/ecommerce-events-history-in-electronics-store

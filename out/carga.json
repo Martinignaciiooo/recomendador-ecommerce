@@ -1,0 +1,14 @@
+{
+  "solicitudes": 1500,
+  "req_por_seg": 876,
+  "extremo_a_extremo_ms": {
+    "p50": 1.09,
+    "p95": 1.47,
+    "p99": 2.37
+  },
+  "inferencia_servidor_ms": {
+    "p50": 0.187,
+    "p95": 0.25,
+    "p99": 0.3
+  }
+}

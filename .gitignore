@@ -1,0 +1,9 @@
+# Dataset (100 MB): se obtiene del ZIP del docente, no va al repositorio
+data/events.csv
+# Artefactos intermedios y datos de producción
+out/dataset.pkl
+out/eventos.db
+.env
+__pycache__/
+.pytest_cache/
+.venv/
