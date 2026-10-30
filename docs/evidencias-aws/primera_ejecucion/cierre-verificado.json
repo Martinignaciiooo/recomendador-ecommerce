@@ -1,0 +1,12 @@
+{
+  "nat_remaining": [],
+  "load_balancers_in_practice_vpc": [],
+  "practice_cluster_remaining": false,
+  "practice_eip_allocations_remaining": [],
+  "retained": {
+    "S3": "shopfast-ep2-lab-models-swp1qfivsnxf",
+    "DynamoDB": "shopfast-ep2-lab-Events-1MVLT8O6T2WVB",
+    "ECR": "CUENTA_AWS_OCULTA.dkr.ecr.us-east-1.amazonaws.com/shopfast-ep2-lab-repo-xvibtvotsodk"
+  },
+  "note": "Datos, imagen y logs retenidos tienen costo residual; no hay NAT, ALB ni ECS activos de esta practica."
+}

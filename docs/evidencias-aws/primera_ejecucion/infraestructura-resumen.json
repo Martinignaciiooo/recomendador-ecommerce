@@ -1,0 +1,20 @@
+{
+  "stack_status": "UPDATE_COMPLETE",
+  "running": 2,
+  "desired": 2,
+  "assign_public_ip": "DISABLED",
+  "tasks": [
+    {
+      "az": "us-east-1b",
+      "status": "RUNNING",
+      "health": "HEALTHY"
+    },
+    {
+      "az": "us-east-1a",
+      "status": "RUNNING",
+      "health": "HEALTHY"
+    }
+  ],
+  "healthy_targets": 2,
+  "note": "Resumen derivado del inventario real; se omiten identificadores de cuenta y red."
+}

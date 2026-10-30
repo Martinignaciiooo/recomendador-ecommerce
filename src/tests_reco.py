@@ -10,6 +10,7 @@ No requieren events.csv: usan el modelo publicado en out/models, por eso corren 
 Ejecutar:  pytest -v tests_reco.py
 """
 import os
+import uuid
 import tempfile
 import warnings
 
@@ -22,6 +23,8 @@ from scipy.sparse import csr_matrix
 
 # Base de eventos temporal: los tests nunca escriben en la base real
 os.environ["EVENTS_DB"] = os.path.join(tempfile.mkdtemp(), "eventos_test.db")
+
+os.environ["RECO_ALLOW_ANONYMOUS"]="1"
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -177,10 +180,10 @@ def test_dashboard_se_sirve(client):
 
 
 def test_autenticacion_rechaza_sin_token(client, known_users, monkeypatch):
-    monkeypatch.setattr(api_mod, "API_TOKEN", "secreto-de-prueba")
+    monkeypatch.setattr(api_mod, "API_TOKEN", "secreto-de-prueba-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
     assert client.get(f"/recomendaciones?user_id={known_users[0]}").status_code == 401
     ok = client.get(f"/recomendaciones?user_id={known_users[0]}",
-                    headers={"Authorization": "Bearer secreto-de-prueba"})
+                    headers={"Authorization": "Bearer secreto-de-prueba-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"})
     assert ok.status_code == 200
     assert client.get("/salud").status_code == 200  # el health check sigue público
 
@@ -204,8 +207,8 @@ def test_evento_se_persiste_e_invalida_cache(client, known_users):
     client.get(f"/recomendaciones?user_id={u}&k=5")
     assert client.get(f"/recomendaciones?user_id={u}&k=5").json()["source"] == "cache"
 
-    r = client.post("/eventos", json={"user_id": str(u), "product_id": 123, "event_type": "purchase"})
-    assert r.status_code == 201
+    r = client.post("/eventos", headers={"Idempotency-Key":str(uuid.uuid4())}, json={"user_id": str(u), "product_id": 123, "event_type": "purchase"})
+    assert r.status_code == 202
 
     with sqlite3.connect(os.environ["EVENTS_DB"]) as con:
         assert con.execute("SELECT COUNT(*) FROM eventos WHERE user_id=?", (u,)).fetchone()[0] == 1
@@ -214,7 +217,7 @@ def test_evento_se_persiste_e_invalida_cache(client, known_users):
 
 
 def test_evento_con_tipo_invalido_se_rechaza(client):
-    r = client.post("/eventos", json={"user_id": 1, "product_id": 1, "event_type": "robo"})
+    r = client.post("/eventos", headers={"Idempotency-Key":str(uuid.uuid4())}, json={"user_id": 1, "product_id": 1, "event_type": "robo"})
     assert r.status_code == 422
 
 

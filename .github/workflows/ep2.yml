@@ -1,0 +1,96 @@
+name: EP2 AWS
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        type: boolean
+        default: false
+        description: 'Desplegar en stack EP2 ya creado. Genera cobros AWS.'
+      mode:
+        type: choice
+        options: [bundled, s3]
+        default: bundled
+      model_key:
+        type: string
+        default: ''
+permissions:
+  contents: read
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements-dev.txt
+      - name: Tests originales adaptados
+        env:
+          PYTHONPATH: src
+          OPENBLAS_NUM_THREADS: '1'
+        run: pytest src/tests_reco.py -q
+      - name: Tests EP2
+        env:
+          PYTHONPATH: 'src:.'
+          OPENBLAS_NUM_THREADS: '1'
+        run: pytest tests/test_ep2.py -q
+      - name: Exportacion y cierre seguro de la demo
+        env:
+          PYTHONPATH: 'src:.'
+        run: pytest tests/test_export_events_lab.py tests/test_autoclose.py -q
+      - run: cfn-lint infra/shopfast.json
+      - run: cfn-lint infra/shopfast-learner-lab.json
+      - run: docker build -f Dockerfile.ep2 -t shopfast:ci .
+      - name: Smoke de la imagen con modelo real
+        shell: bash
+        run: |
+          set -euo pipefail
+          TOKEN=$(openssl rand -hex 24)
+          echo "::add-mask::$TOKEN"
+          docker run -d --name smoke -p 8000:8000 -e EVENTS_BACKEND=sqlite -e RECO_API_TOKEN="$TOKEN" shopfast:ci
+          trap 'docker rm -f smoke >/dev/null' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS localhost:8000/health/ready; then
+              curl -fsS -H "Authorization: Bearer $TOKEN" 'localhost:8000/recomendaciones?user_id=999999999999&k=3'
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs smoke
+          exit 1
+  deploy:
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy
+    needs: test-build
+    runs-on: ubuntu-latest
+    environment: ep2
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      STACK: shopfast-ep2
+      MODE: ${{ inputs.mode }}
+      MODEL_KEY: ${{ inputs.model_key }}
+      NOTIFY_EMAIL: ${{ vars.NOTIFY_EMAIL }}
+      CERT_ARN: ${{ vars.CERTIFICATE_ARN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Build y deploy del stack EP2
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$NOTIFY_EMAIL" && test -n "$CERT_ARN"
+          if [ "$MODE" = s3 ]; then [[ "$MODEL_KEY" == models/* ]]; fi
+          REPO=$(aws cloudformation describe-stacks --stack-name "$STACK" --query "Stacks[0].Outputs[?OutputKey=='RepositoryUri'].OutputValue | [0]" --output text)
+          aws ecr get-login-password | docker login --username AWS --password-stdin "${REPO%%/*}"
+          TAG="${GITHUB_SHA:0:12}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker build -f Dockerfile.ep2 --platform linux/amd64 -t "$REPO:$TAG" .
+          docker push "$REPO:$TAG"
+          aws cloudformation deploy --stack-name "$STACK" --template-file infra/shopfast.json --capabilities CAPABILITY_IAM --parameter-overrides "NotifyEmail=$NOTIFY_EMAIL" PracticeBudget=30 "ImageTag=$TAG" "CertificateArn=$CERT_ARN" "Mode=$MODE" "ModelKey=$MODEL_KEY" --no-fail-on-empty-changeset

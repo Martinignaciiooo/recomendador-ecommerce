@@ -1,0 +1,11 @@
+{
+  "requests": 500,
+  "concurrency": 20,
+  "duration_s": 1.9005983989998185,
+  "throughput_rps": 263.07504008375616,
+  "errors": 0,
+  "p50_ms": 76.61905700001626,
+  "p95_ms": 145.37556499999482,
+  "p99_ms": 180.97143700015295,
+  "note": "Percentiles de respuestas 200, latencia desde cliente. No valida 10000 usuarios concurrentes."
+}

@@ -1,0 +1,10 @@
+{
+  "table": "shopfast-ep2-lab-Events-1MVLT8O6T2WVB",
+  "before_utc": "2026-10-30T03:52:58.364900+00:00",
+  "scanned": 2,
+  "exported": 2,
+  "canonical_rows_sha256": "a345de6d451fb4a5663854be53163d419c3db31e41193185798d447ad6fff9be",
+  "output": "evidencias/eventos-entrenamiento.db",
+  "training_executed": false,
+  "snapshot_requirement": "Tabla sin escrituras o copia PITR estable; Scan no ofrece snapshot entre paginas"
+}

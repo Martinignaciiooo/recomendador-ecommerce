@@ -1,0 +1,1408 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "ShopFast EP2 Learner Lab: LabRole existente, API Gateway HTTPS y ALB interno, dos AZ.",
+  "Parameters": {
+    "ImageTag": {
+      "Type": "String",
+      "Default": ""
+    },
+    "Mode": {
+      "Type": "String",
+      "Default": "bundled",
+      "AllowedValues": [
+        "bundled",
+        "s3"
+      ]
+    },
+    "ModelKey": {
+      "Type": "String",
+      "Default": ""
+    },
+    "DemoCloseAt": {
+      "Type": "String",
+      "Default": "",
+      "Description": "Fecha UTC ISO8601 del cierre; vacia deshabilita el cierre automatico."
+    },
+    "DemoCloseCron": {
+      "Type": "String",
+      "Default": "",
+      "Description": "Cron UTC de EventBridge para una sola fecha, con anio explicito."
+    }
+  },
+  "Conditions": {
+    "DeployService": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "ImageTag"
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "AutoCloseDemo": {
+      "Fn::And": [
+        {
+          "Condition": "DeployService"
+        },
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "DemoCloseAt"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "DemoCloseCron"
+                },
+                ""
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "Vpc": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.42.0.0/16",
+        "EnableDnsSupport": true,
+        "EnableDnsHostnames": true
+      }
+    },
+    "Gateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {}
+    },
+    "Attach": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "InternetGatewayId": {
+          "Ref": "Gateway"
+        }
+      }
+    },
+    "PublicRoutes": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        }
+      }
+    },
+    "InternetRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PublicRoutes"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "Gateway"
+        }
+      },
+      "DependsOn": "Attach"
+    },
+    "Public1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.42.0.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        }
+      }
+    },
+    "Private1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.42.10.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        }
+      }
+    },
+    "PublicAssoc1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Public1"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRoutes"
+        }
+      }
+    },
+    "NatIp1": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc"
+      },
+      "DependsOn": "Attach"
+    },
+    "Nat1": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "NatIp1",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "Public1"
+        }
+      },
+      "DependsOn": "InternetRoute"
+    },
+    "PrivateRoutes1": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        }
+      }
+    },
+    "PrivateRoute1": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PrivateRoutes1"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "Nat1"
+        }
+      }
+    },
+    "PrivateAssoc1": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Private1"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRoutes1"
+        }
+      }
+    },
+    "Public2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.42.1.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        }
+      }
+    },
+    "Private2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "CidrBlock": "10.42.11.0/24",
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        }
+      }
+    },
+    "PublicAssoc2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Public2"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRoutes"
+        }
+      }
+    },
+    "NatIp2": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc"
+      },
+      "DependsOn": "Attach"
+    },
+    "Nat2": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "NatIp2",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "Public2"
+        }
+      },
+      "DependsOn": "InternetRoute"
+    },
+    "PrivateRoutes2": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        }
+      }
+    },
+    "PrivateRoute2": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PrivateRoutes2"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "Nat2"
+        }
+      }
+    },
+    "PrivateAssoc2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Private2"
+        },
+        "RouteTableId": {
+          "Ref": "PrivateRoutes2"
+        }
+      }
+    },
+    "Repo": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "ImageTagMutability": "IMMUTABLE",
+        "ImageScanningConfiguration": {
+          "ScanOnPush": true
+        },
+        "EncryptionConfiguration": {
+          "EncryptionType": "AES256"
+        },
+        "LifecyclePolicy": {
+          "LifecyclePolicyText": "{\"rules\": [{\"rulePriority\": 1, \"description\": \"Eliminar capas sin tag tras 7 dias\", \"selection\": {\"tagStatus\": \"untagged\", \"countType\": \"sinceImagePushed\", \"countUnit\": \"days\", \"countNumber\": 7}, \"action\": {\"type\": \"expire\"}}]}"
+        }
+      },
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain"
+    },
+    "Models": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "VersioningConfiguration": {
+          "Status": "Enabled"
+        },
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        }
+      },
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain"
+    },
+    "ModelPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "Models"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Deny",
+              "Principal": "*",
+              "Action": "s3:*",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "Models",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Fn::Sub": "${Models.Arn}/*"
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain"
+    },
+    "Events": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "event_id",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "event_id",
+            "KeyType": "HASH"
+          }
+        ],
+        "SSESpecification": {
+          "SSEEnabled": true
+        },
+        "PointInTimeRecoverySpecification": {
+          "PointInTimeRecoveryEnabled": true
+        },
+        "TimeToLiveSpecification": {
+          "AttributeName": "expires_at",
+          "Enabled": true
+        }
+      },
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain"
+    },
+    "DeadQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "SqsManagedSseEnabled": true,
+        "MessageRetentionPeriod": 1209600
+      }
+    },
+    "Queue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "SqsManagedSseEnabled": true,
+        "VisibilityTimeout": 180,
+        "MessageRetentionPeriod": 345600,
+        "RedrivePolicy": {
+          "deadLetterTargetArn": {
+            "Fn::GetAtt": [
+              "DeadQueue",
+              "Arn"
+            ]
+          },
+          "maxReceiveCount": 5
+        }
+      }
+    },
+    "Secret": {
+      "Type": "AWS::SecretsManager::Secret",
+      "Properties": {
+        "GenerateSecretString": {
+          "SecretStringTemplate": "{}",
+          "GenerateStringKey": "token",
+          "PasswordLength": 48,
+          "ExcludePunctuation": true
+        }
+      }
+    },
+    "Logs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "RetentionInDays": 14
+      },
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain"
+    },
+    "WorkerLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "RetentionInDays": 14
+      },
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain"
+    },
+    "Consumer": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": {
+          "Fn::Sub": "${AWS::StackName}-events"
+        },
+        "Runtime": "python3.12",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/LabRole"
+        },
+        "Timeout": 30,
+        "MemorySize": 256,
+        "ReservedConcurrentExecutions": 5,
+        "Environment": {
+          "Variables": {
+            "EVENTS_TABLE": {
+              "Ref": "Events"
+            }
+          }
+        },
+        "Code": {
+          "ZipFile": "\"\"\"Consumidor SQS idempotente con fallos parciales. Sin datos personales en logs.\"\"\"\nimport json, os, time, logging\nimport boto3\nfrom botocore.exceptions import ClientError\nlog=logging.getLogger();log.setLevel(logging.INFO)\n_table=None\n\ndef table():\n    global _table\n    if _table is None: _table=boto3.resource('dynamodb').Table(os.environ['EVENTS_TABLE'])\n    return _table\n\ndef handle_record(record, target):\n    data=json.loads(record['body'])\n    required=['event_id','user_id','product_id','interaction_type','timestamp']\n    if not all(isinstance(data.get(k),str) and data[k] for k in required):\n        raise ValueError('Evento incompleto')\n    if data['interaction_type'] not in ['view','cart','purchase']: raise ValueError('Tipo invalido')\n    item={k:data[k] for k in required}\n    item['expires_at']=int(time.time())+90*86400\n    try:\n        target.put_item(Item=item,ConditionExpression='attribute_not_exists(event_id)')\n    except ClientError as e:\n        if e.response['Error']['Code']!='ConditionalCheckFailedException': raise\n\ndef handler(event, context):\n    failures=[]\n    for record in event.get('Records',[]):\n        try: handle_record(record, table())\n        except Exception:\n            log.error(json.dumps({'event':'record_failed','message_id':record['messageId']}))\n            failures.append({'itemIdentifier':record['messageId']})\n    return {'batchItemFailures':failures}\n"
+        },
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "WorkerLogs"
+          }
+        }
+      }
+    },
+    "Mapping": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "Queue",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "Consumer"
+        },
+        "BatchSize": 10,
+        "FunctionResponseTypes": [
+          "ReportBatchItemFailures"
+        ],
+        "Enabled": true
+      }
+    },
+    "Topic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {}
+    },
+    "DeadAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Eventos pendientes de intervencion en DLQ",
+        "Namespace": "AWS/SQS",
+        "MetricName": "ApproximateNumberOfMessagesVisible",
+        "Dimensions": [
+          {
+            "Name": "QueueName",
+            "Value": {
+              "Fn::GetAtt": [
+                "DeadQueue",
+                "QueueName"
+              ]
+            }
+          }
+        ],
+        "Statistic": "Maximum",
+        "Period": 60,
+        "EvaluationPeriods": 1,
+        "Threshold": 1,
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": [
+          {
+            "Ref": "Topic"
+          }
+        ]
+      }
+    },
+    "AgeAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/SQS",
+        "MetricName": "ApproximateAgeOfOldestMessage",
+        "Dimensions": [
+          {
+            "Name": "QueueName",
+            "Value": {
+              "Fn::GetAtt": [
+                "Queue",
+                "QueueName"
+              ]
+            }
+          }
+        ],
+        "Statistic": "Maximum",
+        "Period": 60,
+        "EvaluationPeriods": 2,
+        "Threshold": 60,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": [
+          {
+            "Ref": "Topic"
+          }
+        ]
+      }
+    },
+    "Cluster": {
+      "Type": "AWS::ECS::Cluster",
+      "Properties": {}
+    },
+    "AlbSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "ALB privado solo desde API Gateway VPC Link",
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "SourceSecurityGroupId": {
+              "Ref": "VpcLinkSG"
+            }
+          }
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 8000,
+            "ToPort": 8000,
+            "CidrIp": "10.42.0.0/16"
+          }
+        ]
+      }
+    },
+    "TaskSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "API solo desde ALB",
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 8000,
+            "ToPort": 8000,
+            "SourceSecurityGroupId": {
+              "Ref": "AlbSG"
+            }
+          }
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      }
+    },
+    "Alb": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Subnets": [
+          {
+            "Ref": "Private1"
+          },
+          {
+            "Ref": "Private2"
+          }
+        ],
+        "SecurityGroups": [
+          {
+            "Ref": "AlbSG"
+          }
+        ],
+        "Scheme": "internal",
+        "Type": "application"
+      },
+      "Condition": "DeployService"
+    },
+    "Target": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "Port": 8000,
+        "Protocol": "HTTP",
+        "TargetType": "ip",
+        "HealthCheckPath": "/health/ready",
+        "HealthCheckIntervalSeconds": 15,
+        "HealthCheckTimeoutSeconds": 5,
+        "HealthyThresholdCount": 2,
+        "UnhealthyThresholdCount": 2,
+        "Matcher": {
+          "HttpCode": "200"
+        },
+        "TargetGroupAttributes": [
+          {
+            "Key": "load_balancing.algorithm.type",
+            "Value": "round_robin"
+          },
+          {
+            "Key": "deregistration_delay.timeout_seconds",
+            "Value": "30"
+          }
+        ]
+      },
+      "Condition": "DeployService"
+    },
+    "Listener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "LoadBalancerArn": {
+          "Ref": "Alb"
+        },
+        "Port": 80,
+        "Protocol": "HTTP",
+        "DefaultActions": [
+          {
+            "Type": "forward",
+            "TargetGroupArn": {
+              "Ref": "Target"
+            }
+          }
+        ]
+      },
+      "Condition": "DeployService"
+    },
+    "Task": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties": {
+        "Cpu": "512",
+        "Memory": "1024",
+        "NetworkMode": "awsvpc",
+        "RequiresCompatibilities": [
+          "FARGATE"
+        ],
+        "ExecutionRoleArn": {
+          "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/LabRole"
+        },
+        "TaskRoleArn": {
+          "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/LabRole"
+        },
+        "RuntimePlatform": {
+          "CpuArchitecture": "X86_64",
+          "OperatingSystemFamily": "LINUX"
+        },
+        "ContainerDefinitions": [
+          {
+            "Name": "api",
+            "Image": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Fn::GetAtt": [
+                      "Repo",
+                      "RepositoryUri"
+                    ]
+                  },
+                  ":",
+                  {
+                    "Ref": "ImageTag"
+                  }
+                ]
+              ]
+            },
+            "Essential": true,
+            "ReadonlyRootFilesystem": false,
+            "User": "10001",
+            "PortMappings": [
+              {
+                "ContainerPort": 8000,
+                "Protocol": "tcp"
+              }
+            ],
+            "Environment": [
+              {
+                "Name": "MODEL_SOURCE",
+                "Value": {
+                  "Ref": "Mode"
+                }
+              },
+              {
+                "Name": "PRODUCTION",
+                "Value": "1"
+              },
+              {
+                "Name": "EVENTS_BACKEND",
+                "Value": "sqs"
+              },
+              {
+                "Name": "MODEL_BUCKET",
+                "Value": {
+                  "Ref": "Models"
+                }
+              },
+              {
+                "Name": "MODEL_KEY",
+                "Value": {
+                  "Ref": "ModelKey"
+                }
+              },
+              {
+                "Name": "QUEUE_URL",
+                "Value": {
+                  "Ref": "Queue"
+                }
+              },
+              {
+                "Name": "AWS_DEFAULT_REGION",
+                "Value": {
+                  "Ref": "AWS::Region"
+                }
+              },
+              {
+                "Name": "PYTHONDONTWRITEBYTECODE",
+                "Value": "1"
+              }
+            ],
+            "Secrets": [
+              {
+                "Name": "RECO_API_TOKEN",
+                "ValueFrom": {
+                  "Fn::Sub": "${Secret}:token::"
+                }
+              }
+            ],
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "Logs"
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region"
+                },
+                "awslogs-stream-prefix": "api"
+              }
+            },
+            "HealthCheck": {
+              "Command": [
+                "CMD-SHELL",
+                "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready',timeout=2)\""
+              ],
+              "Interval": 30,
+              "Timeout": 5,
+              "Retries": 3,
+              "StartPeriod": 60
+            }
+          }
+        ]
+      },
+      "Condition": "DeployService"
+    },
+    "Service": {
+      "Type": "AWS::ECS::Service",
+      "Properties": {
+        "Cluster": {
+          "Ref": "Cluster"
+        },
+        "TaskDefinition": {
+          "Ref": "Task"
+        },
+        "DesiredCount": 2,
+        "LaunchType": "FARGATE",
+        "AvailabilityZoneRebalancing": "ENABLED",
+        "DeploymentConfiguration": {
+          "MinimumHealthyPercent": 100,
+          "MaximumPercent": 200,
+          "DeploymentCircuitBreaker": {
+            "Enable": true,
+            "Rollback": true
+          }
+        },
+        "HealthCheckGracePeriodSeconds": 90,
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "AssignPublicIp": "DISABLED",
+            "Subnets": [
+              {
+                "Ref": "Private1"
+              },
+              {
+                "Ref": "Private2"
+              }
+            ],
+            "SecurityGroups": [
+              {
+                "Ref": "TaskSG"
+              }
+            ]
+          }
+        },
+        "LoadBalancers": [
+          {
+            "ContainerName": "api",
+            "ContainerPort": 8000,
+            "TargetGroupArn": {
+              "Ref": "Target"
+            }
+          }
+        ]
+      },
+      "DependsOn": [
+        "Listener",
+        "PrivateRoute1",
+        "PrivateRoute2"
+      ],
+      "Condition": "DeployService"
+    },
+    "ScaleTarget": {
+      "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
+      "Properties": {
+        "MaxCapacity": 4,
+        "MinCapacity": 2,
+        "ResourceId": {
+          "Fn::Sub": "service/${Cluster}/${Service.Name}"
+        },
+        "ScalableDimension": "ecs:service:DesiredCount",
+        "ServiceNamespace": "ecs"
+      },
+      "Condition": "DeployService"
+    },
+    "ScalePolicy": {
+      "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+      "Properties": {
+        "PolicyName": "cpu60",
+        "PolicyType": "TargetTrackingScaling",
+        "ScalingTargetId": {
+          "Ref": "ScaleTarget"
+        },
+        "TargetTrackingScalingPolicyConfiguration": {
+          "TargetValue": 60,
+          "ScaleInCooldown": 120,
+          "ScaleOutCooldown": 60,
+          "PredefinedMetricSpecification": {
+            "PredefinedMetricType": "ECSServiceAverageCPUUtilization"
+          }
+        }
+      },
+      "Condition": "DeployService"
+    },
+    "LatencyAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "TargetResponseTime",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": {
+              "Fn::GetAtt": [
+                "Alb",
+                "LoadBalancerFullName"
+              ]
+            }
+          }
+        ],
+        "Period": 60,
+        "EvaluationPeriods": 2,
+        "Threshold": 0.2,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": [
+          {
+            "Ref": "Topic"
+          }
+        ],
+        "ExtendedStatistic": "p95"
+      },
+      "Condition": "DeployService"
+    },
+    "ErrorsAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "HTTPCode_Target_5XX_Count",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": {
+              "Fn::GetAtt": [
+                "Alb",
+                "LoadBalancerFullName"
+              ]
+            }
+          }
+        ],
+        "Period": 60,
+        "EvaluationPeriods": 2,
+        "Threshold": 5,
+        "ComparisonOperator": "GreaterThanThreshold",
+        "TreatMissingData": "notBreaching",
+        "AlarmActions": [
+          {
+            "Ref": "Topic"
+          }
+        ],
+        "Statistic": "Sum"
+      },
+      "Condition": "DeployService"
+    },
+    "HealthyAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "Namespace": "AWS/ApplicationELB",
+        "MetricName": "HealthyHostCount",
+        "Dimensions": [
+          {
+            "Name": "LoadBalancer",
+            "Value": {
+              "Fn::GetAtt": [
+                "Alb",
+                "LoadBalancerFullName"
+              ]
+            }
+          },
+          {
+            "Name": "TargetGroup",
+            "Value": {
+              "Fn::GetAtt": [
+                "Target",
+                "TargetGroupFullName"
+              ]
+            }
+          }
+        ],
+        "Period": 60,
+        "EvaluationPeriods": 2,
+        "Threshold": 2,
+        "ComparisonOperator": "LessThanThreshold",
+        "TreatMissingData": "breaching",
+        "AlarmActions": [
+          {
+            "Ref": "Topic"
+          }
+        ],
+        "Statistic": "Minimum"
+      },
+      "Condition": "DeployService"
+    },
+    "Dashboard": {
+      "Type": "AWS::CloudWatch::Dashboard",
+      "Properties": {
+        "DashboardBody": {
+          "Fn::Sub": "{\"widgets\": [{\"type\": \"metric\", \"x\": 0, \"y\": 0, \"width\": 12, \"height\": 6, \"properties\": {\"title\": \"Latencia del backend p95\", \"metrics\": [[\"AWS/ApplicationELB\", \"TargetResponseTime\", \"LoadBalancer\", \"${Alb.LoadBalancerFullName}\"]], \"region\": \"${AWS::Region}\", \"stat\": \"p95\", \"period\": 60}}, {\"type\": \"metric\", \"x\": 12, \"y\": 0, \"width\": 12, \"height\": 6, \"properties\": {\"title\": \"CPU ECS\", \"metrics\": [[\"AWS/ECS\", \"CPUUtilization\", \"ClusterName\", \"${Cluster}\", \"ServiceName\", \"${Service.Name}\"]], \"region\": \"${AWS::Region}\", \"stat\": \"Average\", \"period\": 60}}, {\"type\": \"metric\", \"x\": 0, \"y\": 6, \"width\": 12, \"height\": 6, \"properties\": {\"title\": \"Errores backend\", \"metrics\": [[\"AWS/ApplicationELB\", \"HTTPCode_Target_5XX_Count\", \"LoadBalancer\", \"${Alb.LoadBalancerFullName}\"]], \"region\": \"${AWS::Region}\", \"stat\": \"Sum\", \"period\": 60}}, {\"type\": \"metric\", \"x\": 12, \"y\": 6, \"width\": 12, \"height\": 6, \"properties\": {\"title\": \"Antiguedad cola\", \"metrics\": [[\"AWS/SQS\", \"ApproximateAgeOfOldestMessage\", \"QueueName\", \"${Queue.QueueName}\"]], \"region\": \"${AWS::Region}\", \"stat\": \"Average\", \"period\": 60}}]}"
+        }
+      },
+      "Condition": "DeployService"
+    },
+    "AlertQueue": {
+      "Type": "AWS::SQS::Queue",
+      "Properties": {
+        "SqsManagedSseEnabled": true,
+        "MessageRetentionPeriod": 86400
+      }
+    },
+    "AlertQueuePolicy": {
+      "Type": "AWS::SQS::QueuePolicy",
+      "Properties": {
+        "Queues": [
+          {
+            "Ref": "AlertQueue"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "sns.amazonaws.com"
+              },
+              "Action": "sqs:SendMessage",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "AlertQueue",
+                  "Arn"
+                ]
+              },
+              "Condition": {
+                "ArnEquals": {
+                  "aws:SourceArn": {
+                    "Ref": "Topic"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "AlertSubscription": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "TopicArn": {
+          "Ref": "Topic"
+        },
+        "Protocol": "sqs",
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "AlertQueue",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": "AlertQueuePolicy"
+    },
+    "VpcLinkSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "API Gateway VPC Link hacia ALB interno",
+        "VpcId": {
+          "Ref": "Vpc"
+        },
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "CidrIp": "10.42.0.0/16"
+          }
+        ]
+      }
+    },
+    "HttpApi": {
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Condition": "DeployService",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-https"
+        },
+        "ProtocolType": "HTTP",
+        "Description": "HTTPS gestionado por AWS. Backend privado mediante VPC Link."
+      }
+    },
+    "VpcLink": {
+      "Type": "AWS::ApiGatewayV2::VpcLink",
+      "Condition": "DeployService",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}-link"
+        },
+        "SubnetIds": [
+          {
+            "Ref": "Private1"
+          },
+          {
+            "Ref": "Private2"
+          }
+        ],
+        "SecurityGroupIds": [
+          {
+            "Ref": "VpcLinkSG"
+          }
+        ]
+      }
+    },
+    "ApiIntegration": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Condition": "DeployService",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "HTTP_PROXY",
+        "IntegrationMethod": "ANY",
+        "IntegrationUri": {
+          "Ref": "Listener"
+        },
+        "ConnectionType": "VPC_LINK",
+        "ConnectionId": {
+          "Ref": "VpcLink"
+        },
+        "PayloadFormatVersion": "1.0",
+        "TimeoutInMillis": 30000,
+        "RequestParameters": {
+          "overwrite:path": "$request.path"
+        }
+      }
+    },
+    "ApiRoute": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Condition": "DeployService",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "ANY /{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "ApiIntegration"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "ApiRootRoute": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Condition": "DeployService",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "ANY /",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "ApiIntegration"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    "ApiStage": {
+      "Type": "AWS::ApiGatewayV2::Stage",
+      "Condition": "DeployService",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "StageName": "$default",
+        "AutoDeploy": true,
+        "DefaultRouteSettings": {
+          "ThrottlingBurstLimit": 100,
+          "ThrottlingRateLimit": 200
+        }
+      }
+    },
+    "AutoCloseLogs": {
+      "Type": "AWS::Logs::LogGroup",
+      "Condition": "AutoCloseDemo",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 7
+      }
+    },
+    "AutoCloseFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Condition": "AutoCloseDemo",
+      "Properties": {
+        "Runtime": "python3.12",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/LabRole"
+        },
+        "Timeout": 30,
+        "MemorySize": 128,
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "AutoCloseLogs"
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "STACK_ID": {
+              "Ref": "AWS::StackId"
+            },
+            "CLOSE_AT": {
+              "Ref": "DemoCloseAt"
+            }
+          }
+        },
+        "Code": {
+          "ZipFile": "\"\"\"Cierre acotado a este stack de demostracion; no elimina datos retenidos.\"\"\"\nimport datetime as dt\nimport os\n\nimport boto3\n\n\ndef handler(event, context):\n    stack_id = os.environ['STACK_ID']\n    cf = boto3.client('cloudformation')\n    stack = cf.describe_stacks(StackName=stack_id)['Stacks'][0]\n    tags = {item['Key']: item['Value'] for item in stack.get('Tags', [])}\n    if stack['StackId'] != stack_id or tags.get('Project') != 'ShopFastEP2' or tags.get('Practice') != 'true':\n        raise ValueError('El destino no es el stack autorizado de esta practica')\n    if event.get('dry_run'):\n        return {'dry_run': True, 'target': stack['StackName'], 'status': stack['StackStatus']}\n    deadline = dt.datetime.fromisoformat(os.environ['CLOSE_AT'])\n    if deadline.tzinfo is None or dt.datetime.now(dt.timezone.utc) < deadline:\n        raise ValueError('Todavia no corresponde cerrar la demostracion')\n    if stack['StackStatus'].startswith('DELETE_'):\n        return {'already_closing': True}\n    cf.delete_stack(StackName=stack_id)\n    return {'deletion_requested': True, 'target': stack['StackName']}\n"
+        }
+      }
+    },
+    "AutoCloseRule": {
+      "Type": "AWS::Events::Rule",
+      "Condition": "AutoCloseDemo",
+      "Properties": {
+        "ScheduleExpression": {
+          "Ref": "DemoCloseCron"
+        },
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "AutoCloseFunction",
+                "Arn"
+              ]
+            },
+            "Id": "CloseOnlyThisDemo",
+            "Input": "{}"
+          }
+        ]
+      }
+    },
+    "AutoClosePermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Condition": "AutoCloseDemo",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "AutoCloseFunction"
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "AutoCloseRule",
+            "Arn"
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "RepositoryUri": {
+      "Value": {
+        "Fn::GetAtt": [
+          "Repo",
+          "RepositoryUri"
+        ]
+      }
+    },
+    "ModelBucket": {
+      "Value": {
+        "Ref": "Models"
+      }
+    },
+    "QueueUrl": {
+      "Value": {
+        "Ref": "Queue"
+      }
+    },
+    "EventsTable": {
+      "Value": {
+        "Ref": "Events"
+      }
+    },
+    "SecretArn": {
+      "Value": {
+        "Ref": "Secret"
+      }
+    },
+    "ClusterName": {
+      "Value": {
+        "Ref": "Cluster"
+      }
+    },
+    "AlertTopic": {
+      "Value": {
+        "Ref": "Topic"
+      }
+    },
+    "AlbDns": {
+      "Value": {
+        "Fn::GetAtt": [
+          "Alb",
+          "DNSName"
+        ]
+      },
+      "Condition": "DeployService",
+      "Description": "DNS interno; acceder desde Internet por ApiUrl HTTPS."
+    },
+    "ServiceName": {
+      "Value": {
+        "Fn::GetAtt": [
+          "Service",
+          "Name"
+        ]
+      },
+      "Condition": "DeployService"
+    },
+    "TargetArn": {
+      "Value": {
+        "Ref": "Target"
+      },
+      "Condition": "DeployService"
+    },
+    "DemoClosesAtUTC": {
+      "Condition": "AutoCloseDemo",
+      "Value": {
+        "Ref": "DemoCloseAt"
+      }
+    },
+    "AutoCloseFunctionArn": {
+      "Condition": "AutoCloseDemo",
+      "Value": {
+        "Fn::GetAtt": [
+          "AutoCloseFunction",
+          "Arn"
+        ]
+      }
+    },
+    "ApiUrl": {
+      "Condition": "DeployService",
+      "Value": {
+        "Fn::GetAtt": [
+          "HttpApi",
+          "ApiEndpoint"
+        ]
+      }
+    },
+    "AlertQueueUrl": {
+      "Value": {
+        "Ref": "AlertQueue"
+      }
+    },
+    "LabRoleUsed": {
+      "Value": {
+        "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/LabRole"
+      }
+    }
+  }
+}

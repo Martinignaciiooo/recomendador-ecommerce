@@ -1,166 +1,134 @@
-# Sistema de Recomendación de Productos — Implementación
+# Recomendador e-commerce EP2 en AWS
 
-Implementación del Caso 1 (ITY1102) para la Evaluación Final Transversal: modelo
-entrenado sobre el dataset real, API REST, dashboard, tests, contenedor, CI/CD,
-scripts de despliegue en AWS y despliegue en SageMaker.
+Continuación del repositorio real `Martinignaciiooo/recomendador-ecommerce`, base commit `1cc9149b7e7a0b0c2bc0f55e35e904c956e08067`, revisado el 29 de octubre de 2026. Se conserva el modelo ALS, núcleo de inferencia, endpoints en español, entrenamiento y dashboard. `README_ORIGINAL.md` conserva el estado anterior.
 
----
+## AWS ejecutado en Learner Lab — 30 de octubre de 2026
 
-## Resultados medidos
+**Demo reactivada:** [dashboard](https://s1a1vms9gh.execute-api.us-east-1.amazonaws.com/dashboard), [salud pública](https://s1a1vms9gh.execute-api.us-east-1.amazonaws.com/health/ready) y [Swagger](https://s1a1vms9gh.execute-api.us-east-1.amazonaws.com/docs). El panel administrativo necesita el token de Secrets Manager. La segunda demo tiene cierre programado el **30-10-2026 a las 03:55, hora de Santiago** (06:55 UTC). Después de esa hora el enlace puede dejar de responder.
 
-Split **temporal** (entrenar con el pasado, predecir el futuro), corte 30-01-2021,
-1.087 usuarios evaluables en test.
+El informe actualizado de diez páginas está en `entregables/EP2_Informe_ShopFast_Actualizado.docx`. Las evidencias publicables de ambas ejecuciones están en `docs/evidencias-aws/`; se oculta la cuenta AWS.
 
-| Modelo | Precision@10 | Recall@10 | MAP@10 | Cobertura |
-|---|---|---|---|---|
-| Popularidad (baseline) | 0,0125 | 0,0441 | 0,0239 | 0,2 % |
-| Item-item CF (coseno) | 0,0113 | 0,0440 | 0,0154 | 37,3 % |
-| **ALS, 32 factores (en producción)** | **0,0220** | **0,0818** | **0,0368** | 17,4 % |
+La segunda ejecución repitió funcionalidad, dos AZ, eventos y alertas. Carga 100/5: p95 71,13 ms, cero errores. Carga 500/20: p95 101,73 ms, dos fallos sin código registrado. Una repetición instrumentada registró p95 115,04 ms, 499 HTTP 200 y un HTTP 429. Se conservaron los resultados iniciales y no se atribuye retrospectivamente la causa de esos dos fallos. El throttling sigue configurado en 200 solicitudes/s y ráfaga 100.
 
-**ALS vs. baseline: +76 % precisión, +85 % recall, +54 % MAP.**
-Configuración elegida por barrido de 8 combinaciones (`out/sweep.json`): la de mejor
-MAP@10. Contrapartida: el ALS de 128 factores cubre más catálogo (34,7 %) con algo
-menos de precisión; se priorizó la relevancia.
+Se desplegó y probó `shopfast-ep2-lab` en el curso 186191, región `us-east-1`. Como no había dominio, la variante `infra/shopfast-learner-lab.json` usa **HTTPS de API Gateway → VPC Link → ALB interno → dos tareas ECS privadas, en dos AZ**. Usa el `LabRole` existente por las restricciones de Academy. La plantilla original `infra/shopfast.json` conserva la propuesta con dominio, ACM y ALB TLS.
 
-**Latencia** (`out/carga.json`, 1.500 solicitudes a usuarios distintos, un proceso):
+Los resultados medidos están en `evidencias/`; las capturas, en `evidencias/capturas/`. No contienen el token de la API ni credenciales AWS.
 
-| | p50 | p95 | p99 |
-|---|---|---|---|
-| Cálculo en el servidor | 0,19 ms | 0,25 ms | 0,30 ms |
-| Extremo a extremo (HTTP incluido) | 1,09 ms | 1,47 ms | 2,37 ms |
-
-Presupuesto del caso: 200 ms. Throughput: ~876 solicitudes/s en un solo proceso.
-Medido en local: en EC2 se suma la latencia de red, que conviene medir y reportar.
-
-**Tests:** 27 pasando, sin necesitar el dataset (corren en CI).
-
-### Cómo NO leer estos números
-
-Precision@10 = 0,022 significa que, en promedio, 0,22 de cada 10 productos recomendados
-aparecieron en la actividad real del usuario durante el periodo de test. **No es una
-predicción de la conversión.** Afirmar que el sistema lleva la conversión de 1,5 % a
-3,5 % requiere un test A/B en producción; con estos datos solo puede afirmarse que el
-modelo supera claramente a no personalizar.
-
----
-
-## Hallazgos sobre los datos
-
-1. **Dispersión extrema.** Mediana de eventos por usuario: **1**. De 407.283 usuarios,
-   solo 7.706 tienen dos o más compras. Tras filtrar (≥5 interacciones), la matriz es
-   de 22.434 × 7.656 con densidad **0,04 %**. El *cold start* es el caso dominante:
-   el fallback (AD3) sostiene la experiencia para la mayoría de los visitantes.
-2. **Item-item CF no supera a la baseline en precisión**: con esta densidad, la
-   co-ocurrencia entre productos es demasiado escasa. Por eso se eligió ALS.
-3. **La baseline cubre 0,2 % del catálogo**: recomienda casi lo mismo a todos.
-4. **El dataset cubre ~5 meses**, no los 2 años del enunciado. Las cifras del caso se
-   usan como requisitos de negocio; el dataset, como base técnica.
-
----
-
-## Diferencias entre el diseño (EP1) y la implementación
-
-La pauta de la EFT pide justificar los cambios respecto del diseño inicial:
-
-| Diseño EP1 | Implementación | Motivo |
+| Verificación real | Resultado | Evidencia |
 |---|---|---|
-| ECS Fargate con autoescalado | EC2 + Docker | La EFT pide "EC2 o servicio equivalente"; un solo servidor basta para demostrar el sistema y reduce la complejidad operativa para 2 personas. El contenedor es el mismo, así que migrar a ECS no exige cambiar código. |
-| DynamoDB para features | Factores del modelo en memoria | El modelo completo pesa 4,5 MB; leerlo desde una base agregaría latencia sin beneficio a esta escala. DynamoDB se justifica si el catálogo crece órdenes de magnitud. |
-| API Gateway + ACM | Caddy (HTTPS automático con Let's Encrypt) | Mismo resultado (TLS, un punto de entrada) sin costo ni configuración adicional. |
-| Registro de modelos en SageMaker | Registro propio versionado (`out/models/vYYYYMMDD-HHMMSS/` + puntero `current`) | Implementa AD4 de forma simple y verificable; SageMaker se usa para el despliegue AIaaS. |
-| Eventos a un data lake en S3 | SQLite en volumen persistente | Suficiente para el volumen de la demo; el reentrenamiento ya los incorpora. En producción real, S3. |
+| Docker Linux amd64, modelo real | Construcción y smoke correctos | `docker-smoke.json`, `build.log` |
+| HTTPS, autorización y recomendación | Health 200, sin token 401, modelo y fallback correctos | `funcional.json`, `post-rollback.json` |
+| ECS y ALB | 2 tareas saludables, IP pública deshabilitada, 2 AZ y 2 targets saludables | `captura.json` |
+| Eventos idempotentes | Dos envíos con el mismo UUID, un registro lógico en DynamoDB | `eventos-idempotencia.json` |
+| Carga breve desde CloudShell | 100 solicitudes/5 hilos: p95 92,84 ms; 500/20: p95 145,38 ms; cero errores | `carga-5.json`, `carga-20.json` |
+| Reposición de una tarea | 72,82 s; 70 consultas observadas y cero errores | `recuperacion.json` |
+| Modelo desde S3 y rollback | Mismo modelo cargado desde S3; regreso al modelo incluido en 263 s | `model-s3.json`, `rollback-tiempo.json` |
+| Restauración DynamoDB PITR | Copia restaurada en 251,13 s, evento comprobado; 552,08 s incluyendo espera del punto recuperable | `pitr.json` |
+| Logs, métricas y alertas | Logs de API/Lambda; alarma ALARM controlada recibida por SNS → SQS | `logs-api.json`, `logs-worker.json`, `cloudwatch-metricas.json`, `notificacion-sns-recibida.json` |
+| Exportación para entrenamiento | 2 eventos reales exportados a SQLite; manifiesto con corte temporal y hash | `eventos-entrenamiento.manifest.json` |
 
----
+El punto PITR observado tenía aproximadamente 300 segundos de retraso. La prueba restauró una **tabla nueva** y comprobó el dato; no redirigió tráfico ni midió la recuperación completa de la aplicación. El rollback cambió la fuente del artefacto de S3 a la imagen; utilizó los mismos pesos y versión, no dos modelos entrenados distintos.
 
-## Arquitectura implementada
+Las cargas fueron ráfagas cortas dentro de `us-east-1`. No demuestran 10.000 usuarios concurrentes, disponibilidad mensual ni latencia p95 desde Chile. La comprobación HTTPS independiente desde Windows obtuvo health 200 y rechazos 401, con unos 532 ms para el health; incluye una conexión TLS nueva y no es un percentil de recomendaciones (`validacion-desde-windows.json`).
 
-```
-                      HTTPS (Let's Encrypt)
-Navegador / Shopify ──────────► Caddy ──► API FastAPI (Docker, EC2)
-                                           ├─ caché LRU            (AD1)
-                                           ├─ núcleo ALS (core.py)
-                                           ├─ fallback más vendidos (AD3)
-                                           ├─ /eventos ──► SQLite ──┐
-                                           └─ /metricas, /dashboard │
-                                                                    │
-       cron semanal: retrain.sh ◄─────────────────────────────────┘
-          prepare_data → train_final → registro de modelos versionado (AD4)
-                                        └─ se activa solo si no empeora
+Para conservar créditos se retiró el primer stack tras las pruebas. La comprobación está en `cierre-verificado.json`: sin sus NAT, EIP, ALB ni clúster ECS activos. Su URL dejó de estar disponible. Después se recreó la demo con la nueva URL y el cierre programado indicados al principio. Se conservaron modelos S3, imagen ECR, tabla de eventos, copia PITR y logs del primer ensayo; tienen costo residual. La EC2 y los stacks anteriores quedaron fuera del despliegue.
 
-GitHub push ──► Actions: build → test (27) → imagen Docker → smoke test → deploy SSH
-                                                          deploy.sh: health check + rollback
+Las cotizaciones oficiales mensuales son **USD 140,37 con dos réplicas** y **USD 176,41 con cuatro**; son escenarios de 730 horas, no el gasto de esta sesión. Ver `docs/COSTOS.md` y los PDF/CSV/JSON originales de Calculator. El saldo inicial de Academy indicaba USD 10,20 usados de USD 50; su actualización tiene retraso y no permite atribuir todavía el cobro final a esta práctica.
 
-SageMaker Serverless ◄── deploy_sagemaker.py (mismo core.py, mismo modelo)
-```
+### Repetir la demostración
 
----
-
-## Estructura
-
-```
-src/
-  prepare_data.py     carga, suma eventos de la API, split temporal, matriz dispersa
-  train_evaluate.py   3 modelos + métricas (precision, recall, MAP, cobertura)
-  tune.py             barrido de hiperparámetros + benchmark de latencia
-  train_final.py      entrenamiento de producción: versiona y promueve (champion/challenger)
-  core.py             inferencia compartida por la API y SageMaker (solo numpy/scipy)
-  api.py              API REST: caché, fallback, eventos, métricas, auth, dashboard
-  static/dashboard.html
-  tests_reco.py       27 tests
-out/models/           registro de modelos (el activo lo indica 'current')
-out/*.json, *.png     métricas, barrido, prueba de carga, gráfico comparativo
-sagemaker/            handler de inferencia + script de despliegue
-deploy/               bootstrap EC2, deploy con rollback, reentrenamiento, Caddy, guía
-.github/workflows/    pipeline CI/CD
-Dockerfile
-```
-
----
-
-## Uso local
+Subir `shopfast-aws-lab.zip` a CloudShell del curso 186191 y extraerlo. El script comprueba la cuenta antes de cambiar recursos. Trabajar desde el paquete recién extraído para conservar las evidencias de esta ejecución.
 
 ```bash
-pip install -r requirements.txt
-cd src
-
-# La API funciona de inmediato con el modelo incluido:
-uvicorn api:app --reload             # http://localhost:8000/dashboard  ·  /docs
-pytest -v tests_reco.py              # 27 tests
-
-# Reentrenar desde cero (requiere data/events.csv, ver data/LEEME.txt):
-python prepare_data.py               # ~30 s
-python train_evaluate.py             # compara los 3 modelos
-python tune.py                       # barrido + latencia
-python train_final.py                # versiona y promueve si no empeora
+SHOPFAST_RUN_DIR="$HOME/shopfast-demo-$(date +%Y%m%d-%H%M%S)"
+unzip ~/shopfast-aws-lab.zip -d "$SHOPFAST_RUN_DIR"
+cd "$SHOPFAST_RUN_DIR/shopfast-aws-lab"
+export SHOPFAST_EXPECTED_ACCOUNT_ID="REEMPLAZAR_CON_CUENTA_DEL_LABORATORIO"
+bash scripts/lab.sh preflight
+bash scripts/lab.sh build
+bash scripts/lab.sh bootstrap
+bash scripts/lab.sh service
+bash scripts/lab.sh verify
+bash scripts/lab.sh recovery
+bash scripts/lab.sh model-s3
+bash scripts/lab.sh rollback
+python3 scripts/test_pitr_lab.py
+# Respaldar evidencias antes de cerrar.
+bash scripts/lab.sh cleanup
 ```
 
-## Endpoints
+`bootstrap` inicia cobros de NAT; `cleanup` retira solamente el stack nuevo y conserva datos e imágenes. El nombre fijo de stack permite identificar su alcance. Las ejecuciones nuevas generan nombres físicos distintos para los recursos retenidos. No ejecutar otro despliegue y pruebas simultáneamente sobre el mismo stack. Para consultar la demo autenticada, usar el token solo desde Secrets Manager dentro de la sesión de laboratorio; no incluirlo en capturas, repositorio ni entregables.
 
-| Método | Ruta | Auth | Descripción |
-|---|---|---|---|
-| GET | `/recomendaciones?user_id=&k=` | sí | Top-k con categoría, marca y precio. `source`: `model`, `cache` o `fallback` |
-| POST | `/eventos` | sí | Registra `view`/`cart`/`purchase`; invalida la caché del usuario |
-| GET | `/metricas` | no | p50/p95/p99, tasas de caché, fallback y error |
-| GET | `/modelo` | no | Versión activa, configuración, métricas offline vs baseline |
-| GET | `/salud` | no | Health check (balanceador y pipeline) |
-| GET | `/dashboard` | no* | Panel web (*las consultas que hace sí usan el token) |
+## Qué quedó preparado
 
-La autenticación se activa definiendo `RECO_API_TOKEN` (en EC2 lo genera el bootstrap).
+- Modelo real incluido: `v20260921-052859`, 32 factores, 22.434 usuarios y 7.656 productos.
+- API original adaptada: token obligatorio fuera de desarrollo explícito, comparación segura, health check 503 si no está lista y métricas protegidas.
+- `POST /eventos` ahora requiere `Idempotency-Key` UUID y retorna 202. Informa aceptación de evento, no procesamiento terminado.
+- Backend de eventos SQS en AWS y SQLite local. Worker Lambda con escritura condicional idempotente en DynamoDB, DLQ y reintentos parciales.
+- `Dockerfile.ep2`: imagen con el modelo real y solo dependencias de inferencia. El entrenamiento queda fuera de la API.
+- CloudFormation con ECS Fargate, 2 réplicas privadas en dos AZ, ALB TLS, escalado 2-4, 2 NAT, ECR, S3, DynamoDB PITR, SQS/DLQ, Secrets Manager, alarmas y dashboard CloudWatch, SNS y presupuesto.
+- Flujo CI con pruebas, validación CloudFormation y smoke Docker. Despliegue manual por GitHub Actions con OIDC, pendiente de configurar en su cuenta.
+- 5 diagramas editables Draw.io, informe técnico de 10 páginas, presentación y guion.
 
----
+**Estado de validación local:** 27 pruebas originales adaptadas, 11 EP2, 4 del exportador y 4 del cierre seguro: **46 en total**. CloudFormation pasa cfn-lint. Docker y AWS se ejecutaron en CloudShell. La ejecución de CI se comprueba en GitHub Actions; el despliegue GitHub OIDC no está configurado ni se ejecutó. Las métricas offline son previas y no se reentrenó sin el histórico. La EC2 anterior no se modificó.
 
-## Despliegue en AWS
+## Empieza aquí
 
-Ver **`deploy/GUIA_DESPLIEGUE_AWS.md`**: EC2, HTTPS, CI/CD, monitoreo, reentrenamiento
-y SageMaker, paso a paso.
+Leer `docs/GUIA_AWS.md`, `docs/COSTOS.md` y `docs/EVIDENCIAS.md`. El bootstrap crea NAT con cobro continuo. El presupuesto solo alerta. No aplicar en producción existente.
 
-## Qué está verificado y qué no
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements-dev.txt
+$env:PYTHONPATH='src'
+$env:OPENBLAS_NUM_THREADS='1'
+pytest src/tests_reco.py -q
+$env:PYTHONPATH='src;.'
+pytest tests/test_ep2.py -q
+pytest tests/test_export_events_lab.py -q
+pytest tests/test_autoclose.py -q
+cfn-lint infra/shopfast.json
+cfn-lint infra/shopfast-learner-lab.json
+```
 
-| Verificado en este entorno | No verificado (requiere su cuenta AWS / GitHub) |
-|---|---|
-| Entrenamiento, evaluación y promoción de modelos | Construcción real de la imagen Docker |
-| 27 tests en entorno limpio sin el dataset | Ejecución del workflow en GitHub Actions |
-| API con solo las dependencias de la imagen | Bootstrap y deploy en EC2, certificado HTTPS |
-| Dashboard en navegador real (Chromium) | Despliegue en SageMaker |
-| Handler de SageMaker y empaquetado del modelo | Latencia real a través de internet |
-| Sintaxis de scripts bash y del workflow YAML | |
+Las suites se ejecutan en procesos separados porque la original prueba modo anónimo local y la de EP2 prueba modo autenticado. No establecer `RECO_ALLOW_ANONYMOUS=1` en AWS.
+
+## Ejecución local real
+
+```powershell
+$env:PYTHONPATH='src'
+$env:RECO_API_TOKEN='REEMPLAZAR_CON_48_CARACTERES_ALEATORIOS'
+$env:EVENTS_BACKEND='sqlite'
+$env:EVENTS_DB="$PWD/eventos-local.db"
+python -m uvicorn api:app --host 127.0.0.1 --port 8000
+```
+
+Abrir `/dashboard` e ingresar el token solo en esta consola de administración para la demostración. No incrustarlo en Shopify ni en JavaScript distribuido a clientes. El backend de la tienda debe autenticar la sesión del comprador y limitar qué usuario consulta. Esa integración de identidad no está incluida en este repositorio.
+
+## Despliegue y actualización del modelo
+
+La ruta más simple es `Mode=bundled`: se incluye el modelo real del repositorio en la imagen ECR. Todas las réplicas de la misma revisión ejecutan ese artefacto. La versión S3 opcional utiliza un tar.gz con exactamente `factors.npz` y `meta.json`:
+
+```powershell
+python scripts/package_model.py
+aws s3 cp model.tar.gz s3://BUCKET_REAL/models/v20260921-052859.tar.gz --region us-east-1
+```
+
+Reaplicar el servicio con `Mode=s3` y esa clave inmutable. El proceso descarga en `/tmp` al arrancar, no en cada request. Para rollback, restaurar ImageTag/ModelKey anteriores. No sobrescribir la clave activa. S3 y ECR conservan versiones.
+
+`scripts/export_events_lab.py` conecta DynamoDB con el formato SQLite que lee `src/prepare_data.py::load_api_events`. Exige un corte temporal con zona horaria, limita el escaneo, conserva identificadores enteros y rechaza UUID duplicados con contenido distinto. DynamoDB Scan no proporciona un snapshot entre páginas: usar una copia PITR estable o detener escrituras durante la exportación. Ejemplo, con valores reales de otra ejecución:
+
+```bash
+python3 scripts/export_events_lab.py --table TABLA_PITR_ESTABLE \
+  --before 2026-10-30T03:52:58+00:00 --output eventos-entrenamiento.db
+```
+
+El exportador no reemplaza archivos existentes ni entrena o promociona un modelo. Falta el dataset histórico `data/events.csv` para ejecutar entrenamiento y evaluación completos; los dos eventos sintéticos de esta práctica solo comprueban el enlace de datos.
+
+## Seguridad y límites explícitos
+
+En la variante Academy, TLS termina en API Gateway y los tramos VPC Link-ALB-API usan HTTP en la red privada, restringidos por security groups. La plantilla original termina TLS en ALB. El contenedor corre sin root y necesita `/tmp` escribible para S3. Cifrado de los tramos internos, WAF y restricción fina de egress quedan como endurecimiento de producción. El bucket retenido conserva la política que exige HTTPS.
+
+El token autentica a un servicio backend o a un administrador de la demo, no a cada comprador. No existe login de clientes ni rotación automática. API Gateway tiene throttling de 200 solicitudes/s con ráfaga 100 como protección de práctica; es un límite de mejor esfuerzo. La caché y las métricas de la aplicación son por réplica; CloudWatch agrega infraestructura y balanceador. Los logs de aplicación no incluyen tokens, user_id, cuerpo ni query. `LabRole` tiene permisos amplios del laboratorio; una implantación productiva requiere roles separados y mínimos. La alerta se verificó mediante una cola SQS suscrita a SNS, sin suscribir un correo.
+
+El escalado de 2 a 4 tareas por CPU es una configuración inicial de práctica. No demuestra capacidad para 10.000 usuarios concurrentes. Las interacciones no cambian los factores en caliente; la caché local se invalida, pero la personalización cambia al reentrenar. Falta confirmar el caso EP1 correcto y la plantilla arc42 extendida del AVA antes de entregar el informe.

@@ -1,0 +1,9 @@
+{
+  "rows": 2,
+  "time_dtype": "datetime64[us, UTC]",
+  "timezone": "UTC",
+  "user_id_dtype": "int64",
+  "product_id_dtype": "int64",
+  "training_executed": false,
+  "status": "passed"
+}

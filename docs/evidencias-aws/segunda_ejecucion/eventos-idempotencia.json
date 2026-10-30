@@ -1,0 +1,17 @@
+{
+  "event_id": "60ce708c-4e56-4b50-8d63-d97c0d6acd8b",
+  "http_statuses": [
+    202,
+    202
+  ],
+  "persisted_event": {
+    "interaction_type": "view",
+    "event_id": "60ce708c-4e56-4b50-8d63-d97c0d6acd8b",
+    "user_id": "1515915625353230683",
+    "product_id": "3829355",
+    "expires_at": "1801111614",
+    "timestamp": "2026-10-30T04:46:52.210019+00:00"
+  },
+  "observed_processing_s": 2.07875095899999,
+  "logical_records_for_primary_key": 1
+}

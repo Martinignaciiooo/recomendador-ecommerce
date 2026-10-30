@@ -13,7 +13,7 @@ WORKDIR /app
 COPY requirements-api.txt .
 RUN pip install --no-cache-dir -r requirements-api.txt
 
-COPY src/core.py src/api.py src/
+COPY src/core.py src/api.py src/cloud_ep2.py src/
 COPY src/static/ src/static/
 COPY out/models/ out/models/
 

@@ -1,0 +1,12 @@
+{
+  "utc": "2026-10-30T04:46:51.365482+00:00",
+  "url": "https://s1a1vms9gh.execute-api.us-east-1.amazonaws.com",
+  "health": {
+    "estado": "ok",
+    "modelo": "v20260921-052859"
+  },
+  "without_token": 401,
+  "known_user_source": "model",
+  "new_user_source": "fallback",
+  "model_source": "bundled"
+}

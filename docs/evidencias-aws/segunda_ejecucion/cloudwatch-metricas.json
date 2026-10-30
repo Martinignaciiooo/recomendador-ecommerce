@@ -1,0 +1,40 @@
+[
+  {
+    "metric": "TargetResponseTime",
+    "datapoints": []
+  },
+  {
+    "metric": "CPUUtilization",
+    "datapoints": [
+      {
+        "Timestamp": "2026-10-30 04:45:00+00:00",
+        "Average": 9.726504524548847,
+        "Maximum": 48.84736633300781,
+        "Unit": "Percent"
+      },
+      {
+        "Timestamp": "2026-10-30 04:44:00+00:00",
+        "Average": 11.096292302012444,
+        "Maximum": 22.192584604024887,
+        "Unit": "Percent"
+      }
+    ]
+  },
+  {
+    "metric": "MemoryUtilization",
+    "datapoints": [
+      {
+        "Timestamp": "2026-10-30 04:45:00+00:00",
+        "Average": 4.939778645833333,
+        "Maximum": 6.640625,
+        "Unit": "Percent"
+      },
+      {
+        "Timestamp": "2026-10-30 04:44:00+00:00",
+        "Average": 2.197265625,
+        "Maximum": 4.39453125,
+        "Unit": "Percent"
+      }
+    ]
+  }
+]

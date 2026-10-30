@@ -1,0 +1,40 @@
+{
+  "client": "Computador Windows del usuario, fuera de CloudShell",
+  "utc": "2026-10-30T03:03:38.031381+00:00",
+  "tls_validation": true,
+  "checks": [
+    {
+      "path": "/health/ready",
+      "status": 200,
+      "body": {
+        "estado": "ok",
+        "modelo": "v20260921-052859"
+      },
+      "ms": 532.42
+    },
+    {
+      "path": "/recomendaciones?user_id=1",
+      "status": 401,
+      "body": {
+        "detail": "Token inv\u00e1lido o ausente"
+      },
+      "ms": 420.63
+    },
+    {
+      "path": "/metricas",
+      "status": 401,
+      "body": {
+        "detail": "Token inv\u00e1lido o ausente"
+      },
+      "ms": 402.45
+    },
+    {
+      "path": "/modelo",
+      "status": 401,
+      "body": {
+        "detail": "Token inv\u00e1lido o ausente"
+      },
+      "ms": 404.1
+    }
+  ]
+}

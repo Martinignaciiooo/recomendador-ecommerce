@@ -1,0 +1,902 @@
+[
+  {
+    "slug": "01_contexto",
+    "title": "C4 Nivel 1 Contexto del sistema",
+    "nodes": [
+      {
+        "id": "buyer",
+        "x": 30,
+        "y": 55,
+        "w": 250,
+        "h": 100,
+        "title": "Comprador",
+        "detail": "Persona / sesión de tienda",
+        "kind": "person"
+      },
+      {
+        "id": "shop",
+        "x": 430,
+        "y": 55,
+        "w": 250,
+        "h": 100,
+        "title": "Tienda e-commerce",
+        "detail": "Sistema externo / Shopify",
+        "kind": "external"
+      },
+      {
+        "id": "rec",
+        "x": 430,
+        "y": 350,
+        "w": 250,
+        "h": 100,
+        "title": "Recomendador ShopFast",
+        "detail": "Sistema de IA / ALS",
+        "kind": "container"
+      },
+      {
+        "id": "admin",
+        "x": 830,
+        "y": 350,
+        "w": 250,
+        "h": 100,
+        "title": "Equipo técnico",
+        "detail": "Personas / operación",
+        "kind": "person"
+      },
+      {
+        "id": "data",
+        "x": 30,
+        "y": 350,
+        "w": 250,
+        "h": 100,
+        "title": "Datos históricos",
+        "detail": "Fuente externa / events.csv",
+        "kind": "external"
+      }
+    ],
+    "edges": [
+      {
+        "a": "buyer",
+        "b": "shop",
+        "label": "Navega y compra",
+        "points": [
+          [
+            280,
+            105
+          ],
+          [
+            430,
+            105
+          ]
+        ],
+        "lx": 355,
+        "ly": 85
+      },
+      {
+        "a": "shop",
+        "b": "rec",
+        "label": "Backend HTTPS / JSON",
+        "points": [
+          [
+            555,
+            155
+          ],
+          [
+            555,
+            350
+          ]
+        ],
+        "lx": 700,
+        "ly": 245
+      },
+      {
+        "a": "admin",
+        "b": "rec",
+        "label": "Opera y verifica",
+        "points": [
+          [
+            830,
+            400
+          ],
+          [
+            680,
+            400
+          ]
+        ],
+        "lx": 755,
+        "ly": 380
+      },
+      {
+        "a": "data",
+        "b": "rec",
+        "label": "Datos para entrenar",
+        "points": [
+          [
+            280,
+            400
+          ],
+          [
+            430,
+            400
+          ]
+        ],
+        "lx": 355,
+        "ly": 380
+      }
+    ]
+  },
+  {
+    "slug": "02_contenedores",
+    "title": "C4 Nivel 2 Contenedores de la arquitectura",
+    "nodes": [
+      {
+        "id": "api",
+        "x": 50,
+        "y": 75,
+        "w": 250,
+        "h": 100,
+        "title": "API de recomendaciones",
+        "detail": "FastAPI / Docker / ECS",
+        "kind": "container"
+      },
+      {
+        "id": "queue",
+        "x": 475,
+        "y": 75,
+        "w": 250,
+        "h": 100,
+        "title": "Cola de interacciones",
+        "detail": "SQS / entrega al menos una vez",
+        "kind": "data"
+      },
+      {
+        "id": "worker",
+        "x": 900,
+        "y": 75,
+        "w": 250,
+        "h": 100,
+        "title": "Consumidor de eventos",
+        "detail": "Python / Lambda",
+        "kind": "container"
+      },
+      {
+        "id": "train",
+        "x": 50,
+        "y": 420,
+        "w": 250,
+        "h": 100,
+        "title": "Pipeline de datos",
+        "detail": "SQLite listo / ALS pendiente",
+        "kind": "external"
+      },
+      {
+        "id": "model",
+        "x": 475,
+        "y": 420,
+        "w": 250,
+        "h": 100,
+        "title": "Registro de modelos",
+        "detail": "ECR y S3 / artefactos inmutables",
+        "kind": "data"
+      },
+      {
+        "id": "db",
+        "x": 900,
+        "y": 420,
+        "w": 250,
+        "h": 100,
+        "title": "Eventos persistentes",
+        "detail": "DynamoDB / event_id único",
+        "kind": "data"
+      }
+    ],
+    "edges": [
+      {
+        "a": "api",
+        "b": "queue",
+        "label": "Publica eventos",
+        "points": [
+          [
+            300,
+            125
+          ],
+          [
+            475,
+            125
+          ]
+        ],
+        "lx": 385,
+        "ly": 105
+      },
+      {
+        "a": "queue",
+        "b": "worker",
+        "label": "Lotes y reintentos",
+        "points": [
+          [
+            725,
+            125
+          ],
+          [
+            900,
+            125
+          ]
+        ],
+        "lx": 810,
+        "ly": 105
+      },
+      {
+        "a": "worker",
+        "b": "db",
+        "label": "PutItem condicional",
+        "points": [
+          [
+            1025,
+            175
+          ],
+          [
+            1025,
+            420
+          ]
+        ],
+        "lx": 1025,
+        "ly": 290
+      },
+      {
+        "a": "train",
+        "b": "model",
+        "label": "Promoción futura",
+        "points": [
+          [
+            300,
+            470
+          ],
+          [
+            475,
+            470
+          ]
+        ],
+        "lx": 385,
+        "ly": 450,
+        "dashed": true
+      },
+      {
+        "a": "model",
+        "b": "api",
+        "label": "Carga al arranque",
+        "points": [
+          [
+            600,
+            420
+          ],
+          [
+            600,
+            300
+          ],
+          [
+            175,
+            300
+          ],
+          [
+            175,
+            175
+          ]
+        ],
+        "lx": 390,
+        "ly": 280
+      },
+      {
+        "a": "db",
+        "b": "train",
+        "label": "Exportador a SQLite verificado",
+        "points": [
+          [
+            1025,
+            520
+          ],
+          [
+            1025,
+            610
+          ],
+          [
+            175,
+            610
+          ],
+          [
+            175,
+            520
+          ]
+        ],
+        "lx": 600,
+        "ly": 590
+      }
+    ]
+  },
+  {
+    "slug": "03_componentes",
+    "title": "C4 Nivel 3 Componentes dentro de la API",
+    "nodes": [
+      {
+        "id": "auth",
+        "x": 40,
+        "y": 80,
+        "w": 250,
+        "h": 100,
+        "title": "Autenticación",
+        "detail": "verificar_token / Bearer",
+        "kind": "container"
+      },
+      {
+        "id": "routes",
+        "x": 470,
+        "y": 80,
+        "w": 250,
+        "h": 100,
+        "title": "Rutas de la API",
+        "detail": "/recomendaciones y /eventos",
+        "kind": "container"
+      },
+      {
+        "id": "cache",
+        "x": 900,
+        "y": 80,
+        "w": 250,
+        "h": 100,
+        "title": "Caché local LRU",
+        "detail": "Por tarea / bloqueo de acceso",
+        "kind": "container"
+      },
+      {
+        "id": "aws",
+        "x": 40,
+        "y": 420,
+        "w": 250,
+        "h": 100,
+        "title": "Adaptador cloud_ep2",
+        "detail": "Publica SQS / carga S3",
+        "kind": "container"
+      },
+      {
+        "id": "core",
+        "x": 470,
+        "y": 420,
+        "w": 250,
+        "h": 100,
+        "title": "Núcleo Recommender",
+        "detail": "core.py / factores ALS",
+        "kind": "container"
+      },
+      {
+        "id": "fallback",
+        "x": 900,
+        "y": 420,
+        "w": 250,
+        "h": 100,
+        "title": "Fallback y catálogo",
+        "detail": "Popularidad / metadatos",
+        "kind": "container"
+      }
+    ],
+    "edges": [
+      {
+        "a": "auth",
+        "b": "routes",
+        "label": "Autoriza",
+        "points": [
+          [
+            290,
+            130
+          ],
+          [
+            470,
+            130
+          ]
+        ],
+        "lx": 380,
+        "ly": 110
+      },
+      {
+        "a": "routes",
+        "b": "cache",
+        "label": "Busca / almacena",
+        "points": [
+          [
+            720,
+            130
+          ],
+          [
+            900,
+            130
+          ]
+        ],
+        "lx": 810,
+        "ly": 110
+      },
+      {
+        "a": "routes",
+        "b": "core",
+        "label": "Personaliza",
+        "points": [
+          [
+            595,
+            180
+          ],
+          [
+            595,
+            420
+          ]
+        ],
+        "lx": 595,
+        "ly": 300
+      },
+      {
+        "a": "routes",
+        "b": "aws",
+        "label": "Publica interacción",
+        "points": [
+          [
+            470,
+            150
+          ],
+          [
+            375,
+            150
+          ],
+          [
+            375,
+            340
+          ],
+          [
+            165,
+            340
+          ],
+          [
+            165,
+            420
+          ]
+        ],
+        "lx": 270,
+        "ly": 320
+      },
+      {
+        "a": "core",
+        "b": "fallback",
+        "label": "Usuario nuevo / error",
+        "points": [
+          [
+            720,
+            470
+          ],
+          [
+            900,
+            470
+          ]
+        ],
+        "lx": 810,
+        "ly": 450
+      }
+    ]
+  },
+  {
+    "slug": "04_eventos",
+    "title": "Patrón Event Driven y persistencia idempotente",
+    "nodes": [
+      {
+        "id": "backend",
+        "x": 40,
+        "y": 70,
+        "w": 250,
+        "h": 100,
+        "title": "Backend de tienda",
+        "detail": "UUID en Idempotency-Key",
+        "kind": "container"
+      },
+      {
+        "id": "api",
+        "x": 470,
+        "y": 70,
+        "w": 250,
+        "h": 100,
+        "title": "API FastAPI",
+        "detail": "Valida token y evento",
+        "kind": "container"
+      },
+      {
+        "id": "sqs",
+        "x": 900,
+        "y": 70,
+        "w": 250,
+        "h": 100,
+        "title": "SQS Standard",
+        "detail": "Aceptación durable / 202",
+        "kind": "data"
+      },
+      {
+        "id": "dlq",
+        "x": 40,
+        "y": 430,
+        "w": 250,
+        "h": 100,
+        "title": "Cola de errores DLQ",
+        "detail": "Tras 5 recepciones fallidas",
+        "kind": "data"
+      },
+      {
+        "id": "worker",
+        "x": 470,
+        "y": 430,
+        "w": 250,
+        "h": 100,
+        "title": "Lambda consumidora",
+        "detail": "ReportBatchItemFailures",
+        "kind": "container"
+      },
+      {
+        "id": "ddb",
+        "x": 900,
+        "y": 430,
+        "w": 250,
+        "h": 100,
+        "title": "DynamoDB",
+        "detail": "Condición por event_id",
+        "kind": "data"
+      }
+    ],
+    "edges": [
+      {
+        "a": "backend",
+        "b": "api",
+        "label": "POST /eventos",
+        "points": [
+          [
+            290,
+            120
+          ],
+          [
+            470,
+            120
+          ]
+        ],
+        "lx": 380,
+        "ly": 100
+      },
+      {
+        "a": "api",
+        "b": "sqs",
+        "label": "SendMessage",
+        "points": [
+          [
+            720,
+            120
+          ],
+          [
+            900,
+            120
+          ]
+        ],
+        "lx": 810,
+        "ly": 100
+      },
+      {
+        "a": "sqs",
+        "b": "worker",
+        "label": "Lote de hasta 10",
+        "points": [
+          [
+            1025,
+            170
+          ],
+          [
+            1025,
+            310
+          ],
+          [
+            595,
+            310
+          ],
+          [
+            595,
+            430
+          ]
+        ],
+        "lx": 795,
+        "ly": 290
+      },
+      {
+        "a": "worker",
+        "b": "ddb",
+        "label": "Guarda una vez",
+        "points": [
+          [
+            720,
+            480
+          ],
+          [
+            900,
+            480
+          ]
+        ],
+        "lx": 810,
+        "ly": 460
+      },
+      {
+        "a": "sqs",
+        "b": "dlq",
+        "label": "Tras reintentos / intervención",
+        "points": [
+          [
+            1150,
+            150
+          ],
+          [
+            1180,
+            150
+          ],
+          [
+            1180,
+            630
+          ],
+          [
+            165,
+            630
+          ],
+          [
+            165,
+            530
+          ]
+        ],
+        "lx": 660,
+        "ly": 610
+      }
+    ]
+  },
+  {
+    "slug": "05_despliegue",
+    "title": "Despliegue real en Learner Lab us-east-1",
+    "nodes": [
+      {
+        "id": "gw",
+        "x": 475,
+        "y": 20,
+        "w": 250,
+        "h": 90,
+        "title": "API Gateway HTTPS",
+        "detail": "Certificado gestionado por AWS",
+        "kind": "container"
+      },
+      {
+        "id": "link",
+        "x": 475,
+        "y": 170,
+        "w": 250,
+        "h": 90,
+        "title": "VPC Link",
+        "detail": "Conexión a la VPC privada",
+        "kind": "container"
+      },
+      {
+        "id": "alb",
+        "x": 475,
+        "y": 320,
+        "w": 250,
+        "h": 90,
+        "title": "ALB interno",
+        "detail": "HTTP 80 / dos targets healthy",
+        "kind": "container"
+      },
+      {
+        "id": "a",
+        "x": 80,
+        "y": 490,
+        "w": 250,
+        "h": 90,
+        "title": "API réplica A",
+        "detail": "AZ 1a / privada / 0,5 vCPU 1 GiB",
+        "kind": "container"
+      },
+      {
+        "id": "b",
+        "x": 870,
+        "y": 490,
+        "w": 250,
+        "h": 90,
+        "title": "API réplica B",
+        "detail": "AZ 1b / privada / 0,5 vCPU 1 GiB",
+        "kind": "container"
+      },
+      {
+        "id": "na",
+        "x": 80,
+        "y": 665,
+        "w": 250,
+        "h": 90,
+        "title": "NAT Gateway A",
+        "detail": "Subred pública / EIP A",
+        "kind": "external"
+      },
+      {
+        "id": "nb",
+        "x": 870,
+        "y": 665,
+        "w": 250,
+        "h": 90,
+        "title": "NAT Gateway B",
+        "detail": "Subred pública / EIP B",
+        "kind": "external"
+      },
+      {
+        "id": "reg",
+        "x": 475,
+        "y": 790,
+        "w": 250,
+        "h": 90,
+        "title": "Servicios regionales",
+        "detail": "SQS / Lambda / DynamoDB / S3",
+        "kind": "store"
+      }
+    ],
+    "edges": [
+      {
+        "a": "gw",
+        "b": "link",
+        "label": "TLS termina en API Gateway",
+        "points": [
+          [
+            600,
+            110
+          ],
+          [
+            600,
+            170
+          ]
+        ],
+        "lx": 600,
+        "ly": 145
+      },
+      {
+        "a": "link",
+        "b": "alb",
+        "label": "HTTP privado / SG",
+        "points": [
+          [
+            600,
+            260
+          ],
+          [
+            600,
+            320
+          ]
+        ],
+        "lx": 600,
+        "ly": 295
+      },
+      {
+        "a": "alb",
+        "b": "a",
+        "label": "HTTP 8000",
+        "points": [
+          [
+            475,
+            365
+          ],
+          [
+            205,
+            365
+          ],
+          [
+            205,
+            490
+          ]
+        ],
+        "lx": 220,
+        "ly": 430
+      },
+      {
+        "a": "alb",
+        "b": "b",
+        "label": "HTTP 8000",
+        "points": [
+          [
+            725,
+            365
+          ],
+          [
+            995,
+            365
+          ],
+          [
+            995,
+            490
+          ]
+        ],
+        "lx": 980,
+        "ly": 430
+      },
+      {
+        "a": "a",
+        "b": "na",
+        "label": "Salida HTTPS",
+        "points": [
+          [
+            205,
+            580
+          ],
+          [
+            205,
+            665
+          ]
+        ],
+        "lx": 205,
+        "ly": 625
+      },
+      {
+        "a": "b",
+        "b": "nb",
+        "label": "Salida HTTPS",
+        "points": [
+          [
+            995,
+            580
+          ],
+          [
+            995,
+            665
+          ]
+        ],
+        "lx": 995,
+        "ly": 625
+      },
+      {
+        "a": "na",
+        "b": "reg",
+        "label": "Acceso a AWS",
+        "points": [
+          [
+            330,
+            710
+          ],
+          [
+            420,
+            710
+          ],
+          [
+            420,
+            835
+          ],
+          [
+            475,
+            835
+          ]
+        ],
+        "lx": 390,
+        "ly": 770
+      },
+      {
+        "a": "nb",
+        "b": "reg",
+        "label": "Acceso a AWS",
+        "points": [
+          [
+            870,
+            710
+          ],
+          [
+            780,
+            710
+          ],
+          [
+            780,
+            835
+          ],
+          [
+            725,
+            835
+          ]
+        ],
+        "lx": 810,
+        "ly": 770
+      }
+    ],
+    "height": 900
+  }
+]

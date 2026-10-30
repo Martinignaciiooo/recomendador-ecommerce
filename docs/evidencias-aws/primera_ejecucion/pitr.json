@@ -1,0 +1,15 @@
+{
+  "source": "shopfast-ep2-lab-Events-1MVLT8O6T2WVB",
+  "target": "shopfast-ep2-lab-pitr-20261030034128",
+  "event_id": "2866167f-d741-408f-a8c9-9b09d4916a80",
+  "source_unchanged": true,
+  "traffic_redirected": false,
+  "pitr_status": "ENABLED",
+  "latest_restorable_utc": "2026-10-30T03:41:29.811000+00:00",
+  "observed_recovery_point_lag_s": 300.002493,
+  "status": "passed",
+  "restored_event_verified": true,
+  "restore_seconds": 251.13,
+  "including_wait_seconds": 552.08,
+  "retained_test_copy": true
+}

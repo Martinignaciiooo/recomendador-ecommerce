@@ -1,0 +1,269 @@
+{
+	"Name": "ShopFast EP2 - 4 replicas - us-east-1",
+	"Total Cost": {
+		"monthly": "176.41",
+		"upfront": "0.00",
+		"12 months": "2116.92"
+	},
+	"Metadata": {
+		"Currency": "USD",
+		"Locale": "en_US",
+		"Created On": "30/10/2026",
+		"Legal Disclaimer": "AWS Pricing Calculator provides only an estimate of your AWS fees and doesn't include any taxes that might apply. Your actual fees depend on a variety of factors, including your actual usage of AWS services.",
+		"Share Url": "https://calculator.aws/#/estimate?id=12c1d18ecf99a6afb6bad7364525be030d990ec8"
+	},
+	"Groups": {
+		"Services": [
+			{
+				"Service Name": "AWS Fargate",
+				"Description": "ShopFast EP2 - 4 replicas privadas, 0.5 vCPU y 1 GiB, 730 h/mes; resto del consumo fijo para comparar solo computo",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "72.08",
+					"upfront": "0.00",
+					"12 months": "864.96"
+				},
+				"Properties": {
+					"Operating system": "Linux",
+					"CPU Architecture": "x86",
+					"Average duration": "730 hours",
+					"Number of tasks or pods": "4 per month",
+					"Amount of memory allocated": "1 GB",
+					"Amount of ephemeral storage allocated for Amazon ECS": "20 GB"
+				}
+			},
+			{
+				"Service Name": "Public IPv4 Address",
+				"Description": "ShopFast EP2 - 2 NAT por AZ, 2 IPv4 NAT; ALB interno sin IPv4 publica",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "7.30",
+					"upfront": "0.00",
+					"12 months": "87.60"
+				},
+				"Properties": {
+					"Number of In-use public IPv4 addresses": "2"
+				}
+			},
+			{
+				"Service Name": "Network Address Translation (NAT) Gateway",
+				"Description": "ShopFast EP2 - 2 NAT por AZ, 2 IPv4 NAT; ALB interno sin IPv4 publica",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "65.78",
+					"upfront": "0.00",
+					"12 months": "789.36"
+				},
+				"Properties": {
+					"Number of Regional NAT Gateways": "5",
+					"Number of Availability Zones Regional NAT Gateways is active in": "3",
+					"Number of NAT Gateways": "2"
+				}
+			},
+			{
+				"Service Name": "Application Load Balancer",
+				"Description": "ShopFast EP2 - 1 ALB interno, 730 h/mes; supuesto de 1 LCU por bytes (1 GB/h)",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "22.27",
+					"upfront": "0.00",
+					"12 months": "267.24"
+				},
+				"Properties": {
+					"Number of Application Load Balancers": "1"
+				}
+			},
+			{
+				"Service Name": "Amazon API Gateway",
+				"Description": "ShopFast EP2 - HTTP API HTTPS: supuesto 2 millones de solicitudes/mes, 1 KB por request",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "2.00",
+					"upfront": "0.00",
+					"12 months": "24.00"
+				},
+				"Properties": {
+					"HTTP API requests units": "millions",
+					"Average size of each request": "1 KB",
+					"REST API request units": "millions",
+					"Cache memory size (GB)": "None",
+					"WebSocket message units": "thousands",
+					"Average message size": "32 KB",
+					"Requests": "2 per month"
+				}
+			},
+			{
+				"Service Name": "DynamoDB on-demand capacity",
+				"Description": "ShopFast EP2 - On-demand, 1 GB, 1M eventos/mes de 1 KB, 0.1M lecturas, PITR 1 GB",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "0.89",
+					"upfront": "0.00",
+					"12 months": "10.68"
+				},
+				"Properties": {
+					"Table class": "Standard",
+					"Average item size (all attributes)": "1 KB",
+					"Data storage size": "1 GB"
+				}
+			},
+			{
+				"Service Name": "DynamoDB Backup and restore",
+				"Description": "ShopFast EP2 - On-demand, 1 GB, 1M eventos/mes de 1 KB, 0.1M lecturas, PITR 1 GB",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "0.20",
+					"upfront": "0.00",
+					"12 months": "2.40"
+				},
+				"Properties": {
+					"Point-In-Time Recovery (PITR) data storage": "1 GB",
+					"On-demand backup data storage": "0 GB",
+					"Table data restored": "0 GB"
+				}
+			},
+			{
+				"Service Name": "AWS Lambda",
+				"Description": "ShopFast EP2 - consumidor: 1M invocaciones/mes, 256 MB, 100 ms; sin Free Tier",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "0.62",
+					"upfront": "0.00",
+					"12 months": "7.44"
+				},
+				"Properties": {
+					"Architecture": "x86",
+					"Amount of ephemeral storage allocated": "512 MB",
+					"Invoke Mode": "Buffered",
+					"Number of requests": "1000000 per month"
+				}
+			},
+			{
+				"Service Name": "Amazon Simple Queue Service (SQS)",
+				"Description": "ShopFast EP2 - SQS Standard: 3.5M operaciones/mes (envio, consumo, borrado, polling y margen)",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "1.40",
+					"upfront": "0.00",
+					"12 months": "16.80"
+				},
+				"Properties": {
+					"DT Inbound: Not selected": "0 TB per month",
+					"DT Outbound: Not selected": "0 TB per month",
+					"Standard queue requests": "3.5 million per month"
+				}
+			},
+			{
+				"Service Name": "S3 Standard",
+				"Description": "ShopFast EP2 - modelos versionados S3 Standard: 5 GB, 1000 escrituras y 10000 lecturas/mes",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "0.12",
+					"upfront": "0.00",
+					"12 months": "1.44"
+				},
+				"Properties": {
+					"S3 Standard storage": "5 GB per month",
+					"PUT, COPY, POST, LIST requests to S3 Standard": "1000",
+					"GET, SELECT, and all other requests from S3 Standard": "10000"
+				}
+			},
+			{
+				"Service Name": "Amazon Elastic Container Registry",
+				"Description": "ShopFast EP2 - ECR privado: 1 GB de imagenes; pulls dentro de us-east-1",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "0.10",
+					"upfront": "0.00",
+					"12 months": "1.20"
+				},
+				"Properties": {
+					"DT Inbound: Not selected": "0 TB per month",
+					"DT Outbound: Not selected": "0 TB per month",
+					"Amount of data stored": "1 GB per month"
+				}
+			},
+			{
+				"Service Name": "Amazon CloudWatch",
+				"Description": "ShopFast EP2 - logs 1 GB/mes (archivo estimado 1 mes; retencion real 14 dias), 1 dashboard, 5 alarmas propias + 2 autoescalado",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "1.20",
+					"upfront": "0.00",
+					"12 months": "14.40"
+				},
+				"Properties": {
+					"Number of mobile OTEL events and spans or spans per visit": "70",
+					"Mobile sampling rate": "1",
+					"Standard Logs: Data Ingested": "1 GB",
+					"Number of Dashboards": "1",
+					"Number of Standard Resolution Alarm Metrics": "7"
+				}
+			},
+			{
+				"Service Name": "AWS Secrets Manager",
+				"Description": "ShopFast EP2 - 1 secreto de token, 30 dias y 1000 lecturas/mes; sin incluir el valor",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "0.41",
+					"upfront": "0.00",
+					"12 months": "4.92"
+				},
+				"Properties": {
+					"Number of secrets": "1",
+					"Average duration of each secret": "30 days",
+					"Number of API calls": "1000 per month"
+				}
+			},
+			{
+				"Service Name": "Standard topics",
+				"Description": "ShopFast EP2 - SNS Standard: 1000 alertas publicadas y entregadas a SQS por mes, sin correo",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "0.00",
+					"upfront": "0.00",
+					"12 months": "0.00"
+				},
+				"Properties": {
+					"DT Inbound: Not selected": "0 TB per month",
+					"DT Outbound: Not selected": "0 TB per month",
+					"Requests": "1000 per month",
+					"SQS Notifications": "1000 per month"
+				}
+			},
+			{
+				"Service Name": "AWS Fargate",
+				"Description": "Hipotesis de entrenamiento, aun no ejecutado: 4 trabajos/mes, 30 min, 2 vCPU y 4 GiB",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "0.20",
+					"upfront": "0.00",
+					"12 months": "2.40"
+				},
+				"Properties": {
+					"Operating system": "Linux",
+					"CPU Architecture": "x86",
+					"Average duration": "30 minutes",
+					"Number of tasks or pods": "4 per month",
+					"Amount of ephemeral storage allocated for Amazon ECS": "20 GB",
+					"Amount of memory allocated": "4 GB"
+				}
+			},
+			{
+				"Service Name": "Data Transfer",
+				"Description": "ShopFast EP2 - transferencia separada: Internet 20 GB/mes e inter-AZ 2 GB/mes; sin duplicar NAT e IPv4",
+				"Region": "US East (N. Virginia)",
+				"Service Cost": {
+					"monthly": "1.84",
+					"upfront": "0.00",
+					"12 months": "22.08"
+				},
+				"Properties": {
+					"DT Inbound: Not selected": "0 TB per month",
+					"DT Outbound: Internet": "20 GB per month",
+					"DT Intra-Region:": "2 GB per month"
+				}
+			}
+		]
+	}
+}

@@ -12,6 +12,11 @@ Implementa las decisiones arquitectónicas documentadas en el informe:
 Ejecutar:  uvicorn api:app --host 0.0.0.0 --port 8000
 """
 import datetime as dt
+import hmac
+import uuid
+import json
+import logging
+import threading
 import os
 import sqlite3
 import time
@@ -20,11 +25,12 @@ from contextlib import asynccontextmanager
 from typing import List, Literal, Optional
 
 import numpy as np
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from core import Recommender, default_model_root, resolve_current
+from cloud_ep2 import download_model, send_event
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BASE = os.path.dirname(HERE)
@@ -48,6 +54,9 @@ class State:
 
 
 state = State()
+cache_lock = threading.RLock()
+log = logging.getLogger("shopfast")
+logging.basicConfig(level=logging.INFO)
 
 
 def init_events_db(path):
@@ -61,9 +70,13 @@ def init_events_db(path):
 
 
 def load_state():
+    if len(API_TOKEN) < 32 and os.environ.get("RECO_ALLOW_ANONYMOUS") != "1":
+        raise RuntimeError("RECO_API_TOKEN de al menos 32 caracteres es obligatorio")
+    download_model()
     state.rec = Recommender(resolve_current(default_model_root()))
     state.events_db = os.environ.get("EVENTS_DB", os.path.join(BASE, "out", "eventos.db"))
-    init_events_db(state.events_db)
+    if os.environ.get("EVENTS_BACKEND", "sqlite") == "sqlite":
+        init_events_db(state.events_db)
     state.cache.clear()
 
 
@@ -78,11 +91,16 @@ app = FastAPI(
     description="Sistema de recomendación para e-commerce — Caso 1, ITY1102",
     version="2.0.0",
     lifespan=lifespan,
+    docs_url=None if os.environ.get("PRODUCTION") == "1" else "/docs",
+    redoc_url=None if os.environ.get("PRODUCTION") == "1" else "/redoc",
 )
 
 
 def verificar_token(authorization: Optional[str] = Header(None)):
-    if API_TOKEN and authorization != f"Bearer {API_TOKEN}":
+    if not API_TOKEN and os.environ.get("RECO_ALLOW_ANONYMOUS") == "1":
+        return
+    supplied = authorization[7:] if authorization and authorization.startswith("Bearer ") else ""
+    if len(API_TOKEN) < 32 or not hmac.compare_digest(supplied.encode(), API_TOKEN.encode()):
         raise HTTPException(status_code=401, detail="Token inválido o ausente")
 
 
@@ -115,23 +133,41 @@ class Evento(BaseModel):
 # ----------------------------------------------------------------------
 # Lógica
 # ----------------------------------------------------------------------
-def cache_get(key):
+def _cache_get(key):
     val = state.cache.get(key)
     if val is not None:
         state.cache.move_to_end(key)
     return val
 
 
-def cache_put(key, val):
+def _cache_put(key, val):
     state.cache[key] = val
     state.cache.move_to_end(key)
     while len(state.cache) > CACHE_MAX:
         state.cache.popitem(last=False)
 
 
-def cache_invalidate_user(user_id):
+def _cache_invalidate_user(user_id):
     for key in [k for k in state.cache if k[0] == user_id]:
         del state.cache[key]
+
+
+def cache_get(key):
+    with cache_lock: return _cache_get(key)
+
+def cache_put(key, val):
+    with cache_lock: return _cache_put(key,val)
+
+def cache_invalidate_user(user_id):
+    with cache_lock: return _cache_invalidate_user(user_id)
+
+@app.middleware("http")
+async def request_log(request: Request, call_next):
+    rid=str(uuid.uuid4());start=time.perf_counter()
+    response=await call_next(request)
+    response.headers["X-Request-ID"]=rid
+    log.info(json.dumps({"request_id":rid,"status":response.status_code,"latency_ms":round((time.perf_counter()-start)*1000,3)}))
+    return response
 
 
 def enrich(pairs):
@@ -176,25 +212,43 @@ def recomendaciones(user_id: int, k: int = 10):
                                   latency_ms=round(latency, 3), model_version=state.rec.version)
 
 
-@app.post("/eventos", status_code=201, dependencies=[Depends(verificar_token)])
-def registrar_evento(ev: Evento):
-    """Registra un evento de comportamiento. Alimenta el próximo reentrenamiento."""
+@app.post("/eventos", status_code=202, dependencies=[Depends(verificar_token)])
+def registrar_evento(ev: Evento, idempotency_key: str = Header(..., alias="Idempotency-Key")):
+    """Acepta evento duradero. Reintentos deben reutilizar el mismo UUID."""
+    try:
+        event_id=str(uuid.UUID(idempotency_key))
+    except ValueError:
+        raise HTTPException(422, "Idempotency-Key debe ser UUID")
     ts = dt.datetime.now(dt.timezone.utc).isoformat()
-    with sqlite3.connect(state.events_db) as con:
-        con.execute("INSERT INTO eventos VALUES (?, ?, ?, ?)", (ts, ev.event_type, ev.product_id, ev.user_id))
+    if os.environ.get("EVENTS_BACKEND", "sqlite") == "sqs":
+        try:
+            send_event({"event_id":event_id,"user_id":str(ev.user_id),"product_id":str(ev.product_id),
+                        "interaction_type":ev.event_type,"timestamp":ts})
+        except Exception:
+            log.error(json.dumps({"event":"queue_unavailable"}))
+            raise HTTPException(503, "No aceptado; reintente con el mismo Idempotency-Key")
+    else:
+        # Compatibilidad local. Idempotencia también en SQLite para pruebas.
+        with sqlite3.connect(state.events_db) as con:
+            con.execute("CREATE TABLE IF NOT EXISTS event_keys (event_id TEXT PRIMARY KEY)")
+            cursor=con.execute("INSERT OR IGNORE INTO event_keys VALUES (?)",(event_id,))
+            if cursor.rowcount:
+                con.execute("INSERT INTO eventos VALUES (?, ?, ?, ?)", (ts, ev.event_type, ev.product_id, ev.user_id))
     cache_invalidate_user(ev.user_id)
     state.counts["eventos"] += 1
-    return {"registrado": True, "event_time": ts, "cache_invalidada_para": str(ev.user_id)}
+    return {"aceptado":True,"event_id":event_id,"event_time":ts,"cache_invalidada_para":str(ev.user_id)}
 
 
 @app.get("/salud")
 def salud():
     """Health check para el balanceador y el pipeline de despliegue."""
-    return {"estado": "ok" if state.rec else "degradado",
+    if state.rec is None:
+        raise HTTPException(503,"Modelo no listo")
+    return {"estado": "ok",
             "modelo": state.rec.version if state.rec else None}
 
 
-@app.get("/metricas")
+@app.get("/metricas", dependencies=[Depends(verificar_token)])
 def metricas():
     lat = np.array(state.latencies) if state.latencies else np.array([0.0])
     n = max(state.counts["total"], 1)
@@ -213,7 +267,7 @@ def metricas():
     }
 
 
-@app.get("/modelo")
+@app.get("/modelo", dependencies=[Depends(verificar_token)])
 def modelo():
     """Metadatos del modelo activo: versión, configuración y métricas offline."""
     m = state.rec.meta
@@ -221,7 +275,7 @@ def modelo():
                               "dimensiones", "metricas_offline", "baseline_popularidad", "usuarios_test")}
 
 
-@app.get("/usuarios-ejemplo")
+@app.get("/usuarios-ejemplo", dependencies=[Depends(verificar_token)])
 def usuarios_ejemplo(n: int = 5):
     """IDs de usuarios conocidos por el modelo (como texto), para la demo."""
     ids = list(state.rec.uidx.keys())
@@ -233,3 +287,9 @@ def usuarios_ejemplo(n: int = 5):
 @app.get("/", include_in_schema=False)
 def dashboard():
     return FileResponse(os.path.join(HERE, "static", "dashboard.html"))
+
+@app.get("/health/ready")
+def readiness(): return salud()
+
+@app.get("/health/live")
+def liveness(): return {"estado":"up"}

@@ -1,0 +1,493 @@
+{
+  "demo": {
+    "api_url": "https://s1a1vms9gh.execute-api.us-east-1.amazonaws.com",
+    "dashboard_url": "https://s1a1vms9gh.execute-api.us-east-1.amazonaws.com/dashboard",
+    "close_utc": "2026-10-30T06:55:00+00:00",
+    "close_santiago": "2026-10-30T03:55:00-03:00",
+    "cron": "cron(55 6 30 10 ? 2026)",
+    "dry_run": {
+      "dry_run": true,
+      "target": "shopfast-ep2-lab",
+      "status": "UPDATE_COMPLETE"
+    },
+    "auto_close": "scheduled"
+  },
+  "tests_locales": {
+    "originales": 27,
+    "ep2": 11,
+    "exportador": 4,
+    "autocierre": 4,
+    "total": 46
+  },
+  "cargas": [
+    {
+      "ejecucion": "primera",
+      "archivo": "carga-5.json",
+      "requests": 100,
+      "concurrency": 5,
+      "duration_s": 0.7159344010001405,
+      "throughput_rps": 139.67760155162648,
+      "errors": 0,
+      "p50_ms": 32.171342999845365,
+      "p95_ms": 92.84095899988642,
+      "p99_ms": 112.6194729999952,
+      "note": "Percentiles de respuestas 200, latencia desde cliente. No valida 10000 usuarios concurrentes."
+    },
+    {
+      "ejecucion": "primera",
+      "archivo": "carga-20.json",
+      "requests": 500,
+      "concurrency": 20,
+      "duration_s": 1.9005983989998185,
+      "throughput_rps": 263.07504008375616,
+      "errors": 0,
+      "p50_ms": 76.61905700001626,
+      "p95_ms": 145.37556499999482,
+      "p99_ms": 180.97143700015295,
+      "note": "Percentiles de respuestas 200, latencia desde cliente. No valida 10000 usuarios concurrentes."
+    },
+    {
+      "ejecucion": "segunda",
+      "archivo": "carga-5.json",
+      "requests": 100,
+      "concurrency": 5,
+      "duration_s": 0.6333412590001899,
+      "throughput_rps": 157.89276093880696,
+      "errors": 0,
+      "p50_ms": 27.98803499990754,
+      "p95_ms": 71.1250750000545,
+      "p99_ms": 97.8980589998173,
+      "note": "Percentiles de respuestas 200, latencia desde cliente. No valida 10000 usuarios concurrentes."
+    },
+    {
+      "ejecucion": "segunda",
+      "archivo": "carga-20.json",
+      "requests": 500,
+      "concurrency": 20,
+      "duration_s": 1.6721131049998803,
+      "throughput_rps": 299.02283434351517,
+      "errors": 2,
+      "p50_ms": 73.26797600035206,
+      "p95_ms": 101.72712699932163,
+      "p99_ms": 157.2564850002891,
+      "note": "Percentiles de respuestas 200, latencia desde cliente. No valida 10000 usuarios concurrentes."
+    },
+    {
+      "ejecucion": "segunda",
+      "archivo": "carga-diagnostico-20.json",
+      "requests": 500,
+      "concurrency": 20,
+      "duration_s": 1.7970647059992189,
+      "throughput_rps": 278.2314951324949,
+      "errors": 1,
+      "p50_ms": 69.81676999930642,
+      "p95_ms": 115.04199699993478,
+      "p99_ms": 216.00627599946165,
+      "note": "Percentiles de respuestas 200, latencia desde cliente. No valida 10000 usuarios concurrentes.",
+      "http_status_counts": {
+        "200": 499,
+        "429": 1
+      }
+    }
+  ],
+  "recuperacion_ecs": {
+    "replacement_seconds": 72.82,
+    "request_count": 70,
+    "errors": 0,
+    "requests": [
+      {
+        "seconds": 0.07,
+        "status": 200,
+        "latency_ms": 34.910271999933684
+      },
+      {
+        "seconds": 1.1,
+        "status": 200,
+        "latency_ms": 26.29879500000243
+      },
+      {
+        "seconds": 2.12,
+        "status": 200,
+        "latency_ms": 22.84916600001452
+      },
+      {
+        "seconds": 3.15,
+        "status": 200,
+        "latency_ms": 23.64213999999265
+      },
+      {
+        "seconds": 4.18,
+        "status": 200,
+        "latency_ms": 28.38898100003462
+      },
+      {
+        "seconds": 5.27,
+        "status": 200,
+        "latency_ms": 29.468984999994063
+      },
+      {
+        "seconds": 6.3,
+        "status": 200,
+        "latency_ms": 23.012440999991668
+      },
+      {
+        "seconds": 7.32,
+        "status": 200,
+        "latency_ms": 24.558553999895594
+      },
+      {
+        "seconds": 8.34,
+        "status": 200,
+        "latency_ms": 21.61799400005293
+      },
+      {
+        "seconds": 9.37,
+        "status": 200,
+        "latency_ms": 23.65666099990449
+      },
+      {
+        "seconds": 10.47,
+        "status": 200,
+        "latency_ms": 22.459500999957527
+      },
+      {
+        "seconds": 11.5,
+        "status": 200,
+        "latency_ms": 27.921575999926063
+      },
+      {
+        "seconds": 12.53,
+        "status": 200,
+        "latency_ms": 28.491475000009814
+      },
+      {
+        "seconds": 13.57,
+        "status": 200,
+        "latency_ms": 44.73514200003592
+      },
+      {
+        "seconds": 14.6,
+        "status": 200,
+        "latency_ms": 24.325271999941833
+      },
+      {
+        "seconds": 15.7,
+        "status": 200,
+        "latency_ms": 22.564494000107516
+      },
+      {
+        "seconds": 16.74,
+        "status": 200,
+        "latency_ms": 42.48103400004766
+      },
+      {
+        "seconds": 17.77,
+        "status": 200,
+        "latency_ms": 29.094917999827885
+      },
+      {
+        "seconds": 18.8,
+        "status": 200,
+        "latency_ms": 28.944727999942188
+      },
+      {
+        "seconds": 19.83,
+        "status": 200,
+        "latency_ms": 26.615897000056066
+      },
+      {
+        "seconds": 20.93,
+        "status": 200,
+        "latency_ms": 24.685693000037645
+      },
+      {
+        "seconds": 21.96,
+        "status": 200,
+        "latency_ms": 29.721379000193338
+      },
+      {
+        "seconds": 22.98,
+        "status": 200,
+        "latency_ms": 24.27563699984603
+      },
+      {
+        "seconds": 24.01,
+        "status": 200,
+        "latency_ms": 22.775027000079717
+      },
+      {
+        "seconds": 25.03,
+        "status": 200,
+        "latency_ms": 25.819912999850203
+      },
+      {
+        "seconds": 26.13,
+        "status": 200,
+        "latency_ms": 27.60451600011038
+      },
+      {
+        "seconds": 27.15,
+        "status": 200,
+        "latency_ms": 12.829454999973677
+      },
+      {
+        "seconds": 28.19,
+        "status": 200,
+        "latency_ms": 43.16106500004935
+      },
+      {
+        "seconds": 29.21,
+        "status": 200,
+        "latency_ms": 21.400202999984685
+      },
+      {
+        "seconds": 30.24,
+        "status": 200,
+        "latency_ms": 24.86831200008055
+      },
+      {
+        "seconds": 31.32,
+        "status": 200,
+        "latency_ms": 11.739241000213951
+      },
+      {
+        "seconds": 32.36,
+        "status": 200,
+        "latency_ms": 30.009286999984397
+      },
+      {
+        "seconds": 33.38,
+        "status": 200,
+        "latency_ms": 25.490272999832086
+      },
+      {
+        "seconds": 34.4,
+        "status": 200,
+        "latency_ms": 23.26160899997376
+      },
+      {
+        "seconds": 35.43,
+        "status": 200,
+        "latency_ms": 23.022722999940015
+      },
+      {
+        "seconds": 36.53,
+        "status": 200,
+        "latency_ms": 23.52060199996231
+      },
+      {
+        "seconds": 37.56,
+        "status": 200,
+        "latency_ms": 28.77864300012334
+      },
+      {
+        "seconds": 38.59,
+        "status": 200,
+        "latency_ms": 29.12372100013272
+      },
+      {
+        "seconds": 39.62,
+        "status": 200,
+        "latency_ms": 22.700816999986273
+      },
+      {
+        "seconds": 40.64,
+        "status": 200,
+        "latency_ms": 22.593219000100362
+      },
+      {
+        "seconds": 41.74,
+        "status": 200,
+        "latency_ms": 21.020433000103367
+      },
+      {
+        "seconds": 42.76,
+        "status": 200,
+        "latency_ms": 26.367166999989422
+      },
+      {
+        "seconds": 43.78,
+        "status": 200,
+        "latency_ms": 22.34535999991749
+      },
+      {
+        "seconds": 44.8,
+        "status": 200,
+        "latency_ms": 12.530831000049147
+      },
+      {
+        "seconds": 45.82,
+        "status": 200,
+        "latency_ms": 20.804414000167526
+      },
+      {
+        "seconds": 46.91,
+        "status": 200,
+        "latency_ms": 25.1028640000186
+      },
+      {
+        "seconds": 47.94,
+        "status": 200,
+        "latency_ms": 24.91126199993232
+      },
+      {
+        "seconds": 48.96,
+        "status": 200,
+        "latency_ms": 23.2454609999877
+      },
+      {
+        "seconds": 49.98,
+        "status": 200,
+        "latency_ms": 19.912783000108902
+      },
+      {
+        "seconds": 50.99,
+        "status": 200,
+        "latency_ms": 13.378473000102531
+      },
+      {
+        "seconds": 52.1,
+        "status": 200,
+        "latency_ms": 21.26407599985214
+      },
+      {
+        "seconds": 53.13,
+        "status": 200,
+        "latency_ms": 24.327406999873347
+      },
+      {
+        "seconds": 54.15,
+        "status": 200,
+        "latency_ms": 22.448765000035564
+      },
+      {
+        "seconds": 55.16,
+        "status": 200,
+        "latency_ms": 11.269917000163332
+      },
+      {
+        "seconds": 56.18,
+        "status": 200,
+        "latency_ms": 24.471984000001612
+      },
+      {
+        "seconds": 57.27,
+        "status": 200,
+        "latency_ms": 11.505561999911151
+      },
+      {
+        "seconds": 58.29,
+        "status": 200,
+        "latency_ms": 11.950789000138684
+      },
+      {
+        "seconds": 59.31,
+        "status": 200,
+        "latency_ms": 25.50764700004038
+      },
+      {
+        "seconds": 60.32,
+        "status": 200,
+        "latency_ms": 11.048320999861971
+      },
+      {
+        "seconds": 61.34,
+        "status": 200,
+        "latency_ms": 12.667478999901505
+      },
+      {
+        "seconds": 62.45,
+        "status": 200,
+        "latency_ms": 24.181980000093972
+      },
+      {
+        "seconds": 63.47,
+        "status": 200,
+        "latency_ms": 22.302632999981142
+      },
+      {
+        "seconds": 64.5,
+        "status": 200,
+        "latency_ms": 27.965475000200968
+      },
+      {
+        "seconds": 65.52,
+        "status": 200,
+        "latency_ms": 23.793455000031827
+      },
+      {
+        "seconds": 66.54,
+        "status": 200,
+        "latency_ms": 24.108441999942443
+      },
+      {
+        "seconds": 67.64,
+        "status": 200,
+        "latency_ms": 19.680930999811608
+      },
+      {
+        "seconds": 68.66,
+        "status": 200,
+        "latency_ms": 25.36041300004399
+      },
+      {
+        "seconds": 69.69,
+        "status": 200,
+        "latency_ms": 28.035682999870915
+      },
+      {
+        "seconds": 70.71,
+        "status": 200,
+        "latency_ms": 21.460724000007758
+      },
+      {
+        "seconds": 71.74,
+        "status": 200,
+        "latency_ms": 28.36406099982014
+      }
+    ],
+    "target_seconds": 120,
+    "target_met": true
+  },
+  "rollback_configuracion": {
+    "seconds": 263,
+    "scope": "S3 al modelo incluido; misma version del modelo"
+  },
+  "restauracion_pitr": {
+    "source": "shopfast-ep2-lab-Events-1MVLT8O6T2WVB",
+    "target": "shopfast-ep2-lab-pitr-20261030034128",
+    "event_id": "2866167f-d741-408f-a8c9-9b09d4916a80",
+    "source_unchanged": true,
+    "traffic_redirected": false,
+    "pitr_status": "ENABLED",
+    "latest_restorable_utc": "2026-10-30T03:41:29.811000+00:00",
+    "observed_recovery_point_lag_s": 300.002493,
+    "status": "passed",
+    "restored_event_verified": true,
+    "restore_seconds": 251.13,
+    "including_wait_seconds": 552.08,
+    "retained_test_copy": true
+  },
+  "pricing": {
+    "region": "us-east-1",
+    "currency": "USD",
+    "two_replicas": {
+      "monthly": 140.37,
+      "url": "https://calculator.aws/#/estimate?id=d074410aa269b21da99d9eafcd24f1cc0ed57403"
+    },
+    "four_replicas": {
+      "monthly": 176.41,
+      "url": "https://calculator.aws/#/estimate?id=a2fb204d857b4367caabf1e3cf0d5c047a32e92b"
+    },
+    "note": "Escenarios mensuales 730h. No representan consumo real de la practica. Solo cambia el numero de replicas; el resto del trafico se mantiene fijo para comparar computo."
+  },
+  "limites": [
+    "Sin validacion de 10000 usuarios ni disponibilidad mensual",
+    "Percentiles solo de HTTP 200 y desde us-east-1",
+    "Dos fallos iniciales de la segunda ejecucion sin codigo registrado; no se asume su causa",
+    "Repeticion instrumentada: 499 HTTP 200 y 1 HTTP 429",
+    "Rollback del mismo modelo entre S3 y la imagen",
+    "PITR sin redireccion de trafico",
+    "Sin reentrenamiento nuevo ni despliegue GitHub OIDC"
+  ]
+}

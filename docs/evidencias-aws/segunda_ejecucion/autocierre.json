@@ -1,0 +1,13 @@
+{
+  "api_url": "https://s1a1vms9gh.execute-api.us-east-1.amazonaws.com",
+  "dashboard_url": "https://s1a1vms9gh.execute-api.us-east-1.amazonaws.com/dashboard",
+  "close_utc": "2026-10-30T06:55:00+00:00",
+  "close_santiago": "2026-10-30T03:55:00-03:00",
+  "cron": "cron(55 6 30 10 ? 2026)",
+  "dry_run": {
+    "dry_run": true,
+    "target": "shopfast-ep2-lab",
+    "status": "UPDATE_COMPLETE"
+  },
+  "auto_close": "scheduled"
+}

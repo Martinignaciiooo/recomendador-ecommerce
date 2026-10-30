@@ -1,0 +1,9 @@
+{
+  "original_tests_passed": 27,
+  "ep2_tests_passed": 11,
+  "cloudformation_lint": "passed",
+  "shell_syntax_check": "passed",
+  "export_events_tests_passed": 4,
+  "total_tests_passed": 42,
+  "training_input_compatibility": "passed"
+}

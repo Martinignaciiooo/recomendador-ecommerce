@@ -1,0 +1,11 @@
+{
+  "utc": "2026-10-30T03:02:05.894694+00:00",
+  "url": "https://k5il3iofg8.execute-api.us-east-1.amazonaws.com",
+  "health": {
+    "estado": "ok",
+    "modelo": "v20260921-052859"
+  },
+  "without_token": 401,
+  "known_user_source": "model",
+  "new_user_source": "fallback"
+}

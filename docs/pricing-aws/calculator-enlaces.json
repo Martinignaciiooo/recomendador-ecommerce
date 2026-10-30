@@ -1,0 +1,13 @@
+{
+  "region": "us-east-1",
+  "currency": "USD",
+  "two_replicas": {
+    "monthly": 140.37,
+    "url": "https://calculator.aws/#/estimate?id=d074410aa269b21da99d9eafcd24f1cc0ed57403"
+  },
+  "four_replicas": {
+    "monthly": 176.41,
+    "url": "https://calculator.aws/#/estimate?id=a2fb204d857b4367caabf1e3cf0d5c047a32e92b"
+  },
+  "note": "Escenarios mensuales 730h. No representan consumo real de la practica. Solo cambia el numero de replicas; el resto del trafico se mantiene fijo para comparar computo."
+}
