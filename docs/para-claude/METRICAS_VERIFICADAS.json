@@ -489,5 +489,15 @@
     "Rollback del mismo modelo entre S3 y la imagen",
     "PITR sin redireccion de trafico",
     "Sin reentrenamiento nuevo ni despliegue GitHub OIDC"
-  ]
+  ],
+  "github_ci": {
+    "run_id": 41010837858,
+    "head_sha": "5314dc0b19cf912ea27e76914c0a87413b7f6dbe",
+    "conclusion": "success",
+    "url": "https://github.com/Martinignaciiooo/recomendador-ecommerce/actions/runs/41010837858",
+    "workflow": "EP2 AWS",
+    "completed_utc": "2026-10-30T05:53:49Z",
+    "test_build": "success",
+    "aws_oidc_deploy": "skipped"
+  }
 }

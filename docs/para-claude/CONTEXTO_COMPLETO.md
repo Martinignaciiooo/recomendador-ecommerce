@@ -224,7 +224,11 @@ La reposición de 72,82 s satisfizo el objetivo de 120 s en ese ensayo. El rollb
 
 Desde Windows se verificaron TLS estricto, health 200 y rechazos 401. El health tardó unos 532 ms con una conexión TLS nueva; no es un percentil de recomendaciones ni demuestra el objetivo desde Chile. La disponibilidad mensual 99,5% y 10.000 usuarios concurrentes siguen sin validación.
 
-Pruebas locales: 27 originales adaptadas, 11 EP2, 4 del exportador y 4 del cierre seguro, 46 aprobadas. CloudFormation pasó cfn-lint. La imagen Linux amd64 pasó build y smoke en CloudShell. El estado de GitHub Actions debe comprobarse en la ejecución de CI; el despliegue OIDC no se ejecutó.
+Pruebas locales: 27 originales adaptadas, 11 EP2, 4 del exportador y 4 del cierre seguro, 46 aprobadas. CloudFormation pasó cfn-lint. La imagen Linux amd64 pasó build y smoke en CloudShell.
+
+GitHub Actions aprobó pruebas, CloudFormation y Docker para la revisión 5314dc0
+
+La ejecución CI registrada terminó correctamente. El despliegue automático OIDC a AWS permanece sin configurar y no se ejecutó.
 
 11 Riesgos y decisiones pendientes
 

@@ -61,6 +61,12 @@ facts={'demo':live,'tests_locales':{'originales':27,'ep2':11,'exportador':4,'aut
  'Repeticion instrumentada: 499 HTTP 200 y 1 HTTP 429','Rollback del mismo modelo entre S3 y la imagen',
  'PITR sin redireccion de trafico','Sin reentrenamiento nuevo ni despliegue GitHub OIDC']}
 write('03_Para_Claude/METRICAS_VERIFICADAS.json',redact(json.dumps(facts,indent=2,ensure_ascii=False)))
+ci_path=ROOT/'docs/evidencias-aws/github-ci.json'
+if ci_path.exists():
+ facts['github_ci']=load(ci_path)
+ write('03_Para_Claude/METRICAS_VERIFICADAS.json',redact(json.dumps(facts,indent=2,ensure_ascii=False)))
+ (OUT/'08_GitHub').mkdir(exist_ok=True)
+ shutil.copy2(ci_path,OUT/'08_GitHub/CI_GITHUB.json')
 with (OUT/'03_Para_Claude/CARGAS_COMPARADAS.csv').open('w',encoding='utf-8-sig',newline='') as f:
  writer=csv.DictWriter(f,fieldnames=['ejecucion','archivo','requests','concurrency','p95_ms','p99_ms','throughput_rps','errors','http_status_counts'],extrasaction='ignore');writer.writeheader();writer.writerows(measurements)
 

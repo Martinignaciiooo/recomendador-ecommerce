@@ -198,7 +198,14 @@ table(['Ejecución y ensayo','p95 o tiempo','Fallos observados'],[
 p('Las ráfagas se midieron desde CloudShell en us-east-1 y los percentiles incluyen solo respuestas HTTP 200. En la segunda ejecución inicial hubo dos fallos de 500 intentos; la herramienta aún no registraba sus códigos. Se añadió el desglose de estados y se conservó la medición original. La repetición registró '+json.dumps(diag['http_status_counts'],ensure_ascii=False)+'. No se atribuyen retrospectivamente los dos fallos a una causa que no quedó registrada.')
 p('La reposición de 72,82 s satisfizo el objetivo de 120 s en ese ensayo. El rollback de 263 s cambió la fuente del mismo artefacto, no los pesos del modelo. PITR tardó 552,08 s incluyendo espera del punto recuperable, cuyo retraso observado fue aproximadamente 300 s. Se restauró una tabla nueva y se verificó el evento, sin redirigir el tráfico ni medir recuperación completa de la aplicación.')
 p('Desde Windows se verificaron TLS estricto, health 200 y rechazos 401. El health tardó unos 532 ms con una conexión TLS nueva; no es un percentil de recomendaciones ni demuestra el objetivo desde Chile. La disponibilidad mensual 99,5% y 10.000 usuarios concurrentes siguen sin validación.')
-p('Pruebas locales: 27 originales adaptadas, 11 EP2, 4 del exportador y 4 del cierre seguro, 46 aprobadas. CloudFormation pasó cfn-lint. La imagen Linux amd64 pasó build y smoke en CloudShell. El estado de GitHub Actions debe comprobarse en la ejecución de CI; el despliegue OIDC no se ejecutó.')
+p('Pruebas locales: 27 originales adaptadas, 11 EP2, 4 del exportador y 4 del cierre seguro, 46 aprobadas. CloudFormation pasó cfn-lint. La imagen Linux amd64 pasó build y smoke en CloudShell.')
+ci_file=ROOT/'docs/evidencias-aws/github-ci.json'
+ci=read(ci_file) if ci_file.exists() else {}
+if ci.get('conclusion')=='success':
+ link('GitHub Actions aprobó pruebas, CloudFormation y Docker para la revisión '+ci['head_sha'][:7],ci['url'])
+ p('La ejecución CI registrada terminó correctamente. El despliegue automático OIDC a AWS permanece sin configurar y no se ejecutó.')
+else:
+ p('El estado de GitHub Actions se comprueba en la ejecución de CI. El despliegue OIDC no se ejecutó.')
 
 page();h('11 Riesgos y decisiones pendientes')
 p('Se eligió API Gateway con VPC Link por ausencia de dominio y se mantuvo un ALB privado. En producción deben revisarse cuotas, throttling, roles mínimos y costo fijo de NAT frente al tráfico real. Para 10.000 usuarios se necesita diseñar comportamiento, generadores distribuidos, carga sostenida y margen ante pérdida de una AZ.')

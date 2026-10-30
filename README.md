@@ -70,6 +70,8 @@ bash scripts/lab.sh cleanup
 - Flujo CI con pruebas, validación CloudFormation y smoke Docker. Despliegue manual por GitHub Actions con OIDC, pendiente de configurar en su cuenta.
 - 5 diagramas editables Draw.io, informe técnico de 10 páginas, presentación y guion.
 
+**CI en GitHub aprobada:** [ejecución 41010837858](https://github.com/Martinignaciiooo/recomendador-ecommerce/actions/runs/41010837858) validó las pruebas, las dos plantillas, build y smoke Docker de la revisión 5314dc0. El job de deploy OIDC se omitió.
+
 **Estado de validación local:** 27 pruebas originales adaptadas, 11 EP2, 4 del exportador y 4 del cierre seguro: **46 en total**. CloudFormation pasa cfn-lint. Docker y AWS se ejecutaron en CloudShell. La ejecución de CI se comprueba en GitHub Actions; el despliegue GitHub OIDC no está configurado ni se ejecutó. Las métricas offline son previas y no se reentrenó sin el histórico. La EC2 anterior no se modificó.
 
 ## Empieza aquí

@@ -1,25 +1,26 @@
-# Paquete completo de la EP2 ShopFast
+# ShopFast EP2 implementado y validado
 
-## Documentos
+## Informe y material de presentación
 
-- `entregables/EP2_Informe_ShopFast.docx`: informe editable de 10 páginas.
-- `entregables/EP2_EquipoN_Pena_Yantzen.pdf`: informe PDF preparado anteriormente.
-- `entregables/Guia_AWS_ShopFast_EP2.docx`: pasos de cuenta, HTTPS, despliegue, pruebas, evidencias y retirada.
-- `entregables/EP2_Presentacion_EquipoN.pptx`: presentación editable con notas.
-- `entregables/EP2_Presentacion_EquipoN.pdf`: presentación para entregar.
-- `pauta/EP2_ITY1102_Estudiante.pdf`: pauta original del docente.
-- `diagrams/`: cinco diagramas Draw.io editables y sus vistas.
+- entregables/EP2_Informe_ShopFast_Actualizado.docx: informe editable actualizado de diez páginas.
+- entregables/EP2_Informe_ShopFast_Actualizado.pdf: el mismo informe para revisión o entrega.
+- docs/para-claude: prompt, contexto completo, guion de diez diapositivas y métricas verificadas.
+- diagrams: cinco diagramas actualizados en PNG, SVG y Draw.io.
+- docs/pricing-aws y docs/COSTOS.md: cotizaciones oficiales de dos y cuatro réplicas, exports y supuestos.
+- docs/evidencias-aws: copias publicables que separan las dos ejecuciones y ocultan la cuenta AWS.
 
-## Proyecto
+El ZIP de CloudShell contiene fuentes de ejecución. Los informes y el material separado para Claude están en el paquete completo y en el repositorio.
 
-El código, modelo real, Dockerfile, CloudFormation, workflow y scripts están en la raíz del paquete. Lee README.md antes de desplegar.
+## Estado real al 30 de octubre de 2026
 
-Estado actualizado al 30-10-2026: **46 pruebas locales aprobadas**, cfn-lint correcto, Docker construido y AWS probado en Learner Lab 186191. Se verificaron HTTPS, dos réplicas privadas en dos AZ, eventos, alertas, carga, reposición ECS, modelo S3, rollback y PITR. README.md separa las dos ejecuciones y conserva los errores observados. El informe actualizado está en `entregables/EP2_Informe_ShopFast_Actualizado.docx`.
+Pasaron 46 pruebas locales y la validación de ambas plantillas. Docker se construyó en CloudShell y la API se desplegó en Learner Lab 186191. Se comprobaron HTTPS, dos tareas privadas en dos AZ, eventos idempotentes, logs, métricas, SNS, cargas breves, reposición ECS, modelo S3, rollback de fuente y una copia PITR. Los errores de las cargas posteriores permanecen documentados.
 
-El primer stack se retiró después del respaldo. La demo se recreó con cierre programado el 30-10-2026 a las 03:55 de Santiago; el README contiene los enlaces actuales. Los recursos retenidos tienen costo residual y la EC2 anterior no se modificó. La variante usa HTTPS de API Gateway porque no había dominio. `infra/shopfast-learner-lab.json` y `scripts/lab.sh` permiten repetirla con la cuenta esperada configurada.
+La integración continua de GitHub Actions aprobó pruebas, CloudFormation, build y smoke Docker en la revisión 5314dc0. El despliegue OIDC a AWS no se configuró ni ejecutó. La ejecución está enlazada en el README y el informe.
 
-Las cotizaciones oficiales de dos y cuatro réplicas, con enlaces y exportaciones PDF/CSV/JSON, están en `docs/COSTOS.md` y `evidencias/`. Esos montos mensuales no son el consumo de esta sesión.
+La primera ejecución se retiró y verificó. La segunda demo tiene cierre programado el 30-10-2026 a las 03:55 de Santiago. El README contiene enlaces y el archivo autocierre.json conserva el horario. Los recursos retenidos generan costo residual; la EC2 anterior no se modificó.
 
-GitHub Actions/OIDC y el reentrenamiento completo quedan pendientes; no se publicaron cambios en GitHub. Ya se exportaron eventos de DynamoDB al formato del entrenamiento, pero falta `data/events.csv` para entrenar y evaluar de nuevo. Confirmar caso EP1, número de equipo y plantilla arc42 extendida del AVA. Los documentos y diapositivas preparados anteriormente deben incorporar los resultados del README antes de la entrega académica final.
+El modelo es el artefacto real preentrenado v20260921-052859. Se exportaron eventos de DynamoDB al formato SQLite del entrenamiento, pero falta data/events.csv para entrenar y evaluar otra versión. No se validaron 10.000 usuarios ni disponibilidad mensual.
 
-La pauta pide un informe PDF de 10 páginas, al menos cinco diagramas, dos fuentes técnicas APA y declaración IA, más defensa de máximo 10 minutos. Reemplazar EquipoN en los nombres y actualizar con evidencias reales antes de entregar.
+## Preparación de la defensa
+
+Usar el prompt y el guion para que Claude construya el PPTX y PDF de diez diapositivas y diez minutos. Confirmar el número de equipo y la plantilla extendida del AVA sin inventarlos. La pauta solicita al menos cinco diagramas, dos fuentes técnicas APA y declaración IA; el informe actualizado los contempla. No incluir credenciales en Claude, capturas, documentos o GitHub.
